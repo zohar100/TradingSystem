@@ -1,11 +1,9 @@
 from __future__ import annotations
-from dotenv import load_dotenv
 from decouple import config
 from bars_api.bars_api_utilities import bars_api_utilities
 
 from bars_api.dto.get_bars_dto import get_bars_dto
 
-from datetime import datetime
 import requests
 
 END_POINT = config('BARS_API_ENDPOINT', 'http://localhost:3001/api/') 
