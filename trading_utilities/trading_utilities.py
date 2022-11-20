@@ -22,5 +22,4 @@ class trading_utilities:
         schedule["Dates"] = pd.to_datetime(schedule["market_open"]).dt.date
         schedule = schedule["Dates"]
         last_trading_date = schedule[-2]
-        formatted_last_trading_date = last_trading_date.strftime("%Y-%m-%d")
-        return formatted_last_trading_date
+        return last_trading_date
