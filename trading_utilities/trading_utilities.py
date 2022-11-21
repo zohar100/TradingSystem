@@ -23,3 +23,18 @@ class trading_utilities:
         schedule = schedule["Dates"]
         last_trading_date = schedule[-2]
         return last_trading_date
+    
+    @staticmethod
+    def check_pl(action: str, bar: pd.DataFrame, take_profit: float, stop_loss: float = None):
+        if action == "BUY":
+            if bar["High"] >= take_profit or bar["Close"] >= take_profit:
+                return "P"
+            elif stop_loss and (bar["Low"] <= stop_loss or bar["Close"] <= stop_loss):
+                return "L"
+        if action == "SELL":
+            if bar["Low"] <= take_profit or bar["Close"] <= take_profit:
+                return "P"
+            elif stop_loss and (bar["High"] >= stop_loss or bar["Close"] >= stop_loss):
+                return "L"
+
+        return None

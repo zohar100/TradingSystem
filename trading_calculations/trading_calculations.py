@@ -11,3 +11,12 @@ class trading_calculations:
     @staticmethod
     def market_size_percentage(high, low):
         return (high - low) * 100 / high
+
+    @staticmethod
+    def pl(buy_point: float, quantity: float, filled_price: float, direction: str, commition: float = 0):
+        money_invested = buy_point * quantity
+        money_done = filled_price * quantity
+        if direction == "BUY":
+            return (money_done - money_invested) - commition
+        if direction == "SELL":
+            return (money_invested - money_done) - commition
