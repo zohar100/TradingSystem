@@ -76,7 +76,7 @@ for today_date in dates:
 
     # Everything fine we are about to make order
     take_profit = last_trading_date_data["Low"][-1] if market_direction == "BUY" else last_trading_date_data["High"][-1]
-    risk = 8000
+    risk = 16000
     quantity = calc_quantity(risk, today_open)
     print(f"That is our take profirt {take_profit}")
     print(f"That is our quantity {quantity}")
