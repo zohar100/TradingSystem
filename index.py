@@ -5,6 +5,7 @@ import pandas as pd
 from utilities import utilities
 from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
+from candlestick_patterns import candlestick_patterns
 from ib_insync import *
 import pytz
 
@@ -48,14 +49,31 @@ def get_spy_data_from_ib(end_date: date):
     df_data = pd.DataFrame(dict_data).set_index('Date')
     return df_data
 
+def check_for_candlestick_patterns(bars: pd.DataFrame, direction: str):
+    if direction == "BUY":
+        hummer = candlestick_patterns.hummer(bars)
+        if hummer: 
+            return "HUMMER"
+        okar_buy = candlestick_patterns.okar_buy(bars)
+        if okar_buy:
+            return "OKAR_BUY"
+    if direction == "SELL":
+        shooting = candlestick_patterns.shooting_star(bars)
+        if shooting:
+            return "SHOOTING_STAR"
+        okar_sell = candlestick_patterns.okar_sell(bars)
+        if okar_sell:
+            return "OKAR_SELL"
+
+    return None
 
 ib = IB()
 ib.connect(host='127.0.0.1', port=7497, clientId=1)
 
 orders: list[dict] = []
 
-start_date = date(2019, 1, 1)
-end_date = date(2019, 12, 31)
+start_date = date(2022, 1, 1)
+end_date = date(2022, 11, 21)
 dates = utilities.daterange(start_date, end_date)
 for today_date in dates:
     print(today_date)
@@ -114,9 +132,10 @@ for today_date in dates:
     print(f"We going to make a {market_direction} trade")
 
     # Everything fine we are about to make order
-    take_profit = last_trading_date_data["Low"][-1] if market_direction == "BUY" else last_trading_date_data["High"][-1]
+    take_profit = min(last_trading_date_data["Low"][:-5]) if market_direction == "BUY" else max(last_trading_date_data["High"][:-5])
     risk = 16000
     quantity = calc_quantity(risk, today_open)
+
     print(f"That is our take profirt {take_profit}")
     print(f"That is our quantity {quantity}")
 
@@ -132,8 +151,24 @@ for today_date in dates:
     }
 
     trading_candiles = today_data.iloc[:-10]
+    candlestick_pattern = None
+    candlestick_close_price = None
+    candlestick_time = None
+
+    for index, bar in trading_candiles.iloc[:5].iterrows():
+        if not candlestick_pattern:
+            candlestick_pattern = check_for_candlestick_patterns(trading_candiles[:index], market_direction)
+            if candlestick_pattern:
+                candlestick_close_price = bar["Close"]
+                candlestick_time = index
+
+    order["candlestick_pattern"] = candlestick_pattern if candlestick_pattern else "N/A"
+    order["candlestick_close_price"] = candlestick_close_price if candlestick_close_price else "N/A"
+    order["candlestick_time"] = candlestick_time if candlestick_time else "N/A"
+
     last_bar_index = trading_candiles.index[-1]
     for index, bar in trading_candiles.iterrows():
+
         pl = trading_utilities.check_pl(market_direction, bar, take_profit)
         if pl:
             order["lowest_point"] = min(trading_candiles["Low"][:index])

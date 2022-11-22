@@ -20,3 +20,7 @@ class trading_calculations:
             return (money_done - money_invested) - commition
         if direction == "SELL":
             return (money_invested - money_done) - commition
+    
+    @staticmethod
+    def bar_size(high: float, low: float):
+        return high - low
