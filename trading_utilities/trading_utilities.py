@@ -1,8 +1,14 @@
 import pandas as pd
 import pandas_market_calendars as mcal
 import datetime
-from datetime import date
+from datetime import date, time
 
+import pytz
+
+new_york_timezone = pytz.timezone("US/Eastern")
+pre_market_start_time = time(4)
+market_start_time = time(9,30)
+market_end_time = time(16)
 
 class trading_utilities:
     @staticmethod
