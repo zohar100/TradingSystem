@@ -8,7 +8,7 @@ import pytz
 new_york_timezone = pytz.timezone("US/Eastern")
 pre_market_start_time = time(4)
 market_start_time = time(9,30)
-market_end_time = time(16)
+market_end_time = time(15, 59)
 
 class trading_utilities:
     @staticmethod

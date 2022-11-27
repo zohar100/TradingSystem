@@ -1,18 +1,16 @@
 import csv
 from datetime import *
+import talib
+from talib_utilities import talib_utilities
 import yfinance
 import pandas as pd
 from utilities import utilities
-from trading_utilities import trading_utilities
+from trading_utilities import trading_utilities, new_york_timezone, market_end_time, market_start_time, pre_market_start_time
 from trading_calculations import trading_calculations
 from candlestick_patterns import candlestick_patterns
 from ib_insync import *
 import pytz
 
-tz_ny = pytz.timezone("US/Eastern")
-pre_market_start_time = time(9,30)
-market_start_time = time(9,30)
-market_end_time = time(16)
 
 def check_direction(yesterday_close: float, today_open: float, plus: float):
     if yesterday_close < today_open - plus:
@@ -34,7 +32,7 @@ def format_ib_bar(bar: dict):
     new_bar = {}
     for field in fields:
         if field == "Date":
-            new_bar[field] = bar[field.lower()].astimezone(tz_ny)
+            new_bar[field] = bar[field.lower()].astimezone(new_york_timezone)
         else:
             new_bar[field] = bar[field.lower()]
     return new_bar
@@ -72,7 +70,7 @@ ib.connect(host='127.0.0.1', port=7497, clientId=1)
 
 orders: list[dict] = []
 
-start_date = date(2022, 1, 1)
+start_date = date(2022, 11,21)
 end_date = date(2022, 11, 21)
 dates = utilities.daterange(start_date, end_date)
 for today_date in dates:
@@ -84,9 +82,12 @@ for today_date in dates:
 
     last_trading_date = trading_utilities.get_last_trading_date(today_date)
 
+    # col_names = ["Date","High","Open","Low","Close","Volume"]
+    # all_data = pd.read_csv('./data/SPY/SPY-2022.csv', skiprows=196068, names=col_names, index_col="Date")
+    # all_data.index = pd.to_datetime(all_data.index)
     all_data: pd.DataFrame = get_spy_data_from_ib(today_date)
     all_data.index = all_data.index.tz_localize(None)
-
+    
     print("Saving data....")
     try:
         pd.read_csv(f'./data/SPY/SPY-{start_date.strftime("%Y")}.csv', index_col="Date").append(all_data).drop_duplicates().to_csv(f'./data/SPY/SPY-{start_date.strftime("%Y")}.csv', encoding='utf-8', index=True)
@@ -97,10 +98,12 @@ for today_date in dates:
     last_trading_start_date_time = datetime.combine(last_trading_date, market_start_time)
     last_trading_end_date_time = datetime.combine(last_trading_date, market_end_time)
     last_trading_date_data = all_data.loc[last_trading_start_date_time:last_trading_end_date_time]
+    print(last_trading_date_data)
 
     today_start_date_time = datetime.combine(today_date, market_start_time)
     today_end_date_time = datetime.combine(today_date, market_end_time)
     today_data = all_data.loc[today_start_date_time:today_end_date_time]
+    print(today_data)
 
     pre_market_start_date_time = datetime.combine(today_date, pre_market_start_time)
     pre_market_end_date_time = datetime.combine(today_date, market_start_time)
@@ -150,29 +153,47 @@ for today_date in dates:
         "volume": sum(pre_market_data["Volume"]) * 100
     }
 
-    trading_candiles = today_data.iloc[:-10]
-    candlestick_pattern = None
-    candlestick_close_price = None
-    candlestick_time = None
+    trading_candles = today_data.iloc[:-10]
 
-    for index, bar in trading_candiles.iloc[:5].iterrows():
-        if not candlestick_pattern:
-            candlestick_pattern = check_for_candlestick_patterns(trading_candiles[:index], market_direction)
-            if candlestick_pattern:
-                candlestick_close_price = bar["Close"]
-                candlestick_time = index
+    first_five_mins_bars = trading_candles.iloc[:5]
+    op = first_five_mins_bars['Open']
+    hi = first_five_mins_bars['High']
+    lo = first_five_mins_bars['Low']
+    cl = first_five_mins_bars['Close']
+    
+    patterns = {}
+    candle_names = talib.get_function_groups()['Pattern Recognition']
+    for candle in candle_names:
+        patterns[candle] = getattr(talib, candle)(op, hi, lo, cl)
 
-    order["candlestick_pattern"] = candlestick_pattern if candlestick_pattern else "N/A"
-    order["candlestick_close_price"] = candlestick_close_price if candlestick_close_price else "N/A"
-    order["candlestick_time"] = candlestick_time if candlestick_time else "N/A"
+    patterns_to_save = []
+    for patten, _data in patterns.items():
+        for _time, is_pattern in _data.items():
+            if is_pattern:
+                action = "SELL" if is_pattern < 0 else "BUY"
+                if action == market_direction:
+                    pattern_to_save = {
+                        "time": str(_time),
+                        "Close": first_five_mins_bars.loc[_time]["Close"],
+                        "High": first_five_mins_bars.loc[_time]["High"],
+                        "Low": first_five_mins_bars.loc[_time]["Low"],
+                        "Open": first_five_mins_bars.loc[_time]["Open"],
+                        "Volume": first_five_mins_bars.loc[_time]["Volume"],
+                        "pattern": talib_utilities.get_candlestick_pattern_label(patten),
+                        "direction": action
+                    }
+                    patterns_to_save.append(pattern_to_save)
 
-    last_bar_index = trading_candiles.index[-1]
-    for index, bar in trading_candiles.iterrows():
+    
+    order["patterns"] = patterns_to_save
+
+    last_bar_index = trading_candles.index[-1]
+    for index, bar in trading_candles.iterrows():
 
         pl = trading_utilities.check_pl(market_direction, bar, take_profit)
         if pl:
-            order["lowest_point"] = min(trading_candiles["Low"][:index])
-            order["highest_point"] = max(trading_candiles["High"][:index])
+            order["lowest_point"] = min(trading_candles["Low"][:index])
+            order["highest_point"] = max(trading_candles["High"][:index])
             order["exit_at_price"] = take_profit
             order["exit_at_time"] = index
             order["pl"] = trading_calculations.pl(order["buy_point"], quantity, take_profit, market_direction, 1.8)
@@ -180,8 +201,8 @@ for today_date in dates:
             break
 
         if index == last_bar_index:
-            order["lowest_point"] = min(trading_candiles["Low"][:index])
-            order["highest_point"] = max(trading_candiles["High"][:index])
+            order["lowest_point"] = min(trading_candles["Low"][:index])
+            order["highest_point"] = max(trading_candles["High"][:index])
             order["exit_at_price"] = bar["Close"]
             order["exit_at_time"] = index
             order["pl"] = trading_calculations.pl(order["buy_point"], quantity, bar["Close"], market_direction, 1.8)
