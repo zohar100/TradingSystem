@@ -12,6 +12,7 @@ from ib_insync import *
 import pytz
 
 
+
 def check_direction(yesterday_close: float, today_open: float, plus: float):
     if yesterday_close < today_open - plus:
         return "SELL"
