@@ -70,8 +70,8 @@ ib.connect(host='127.0.0.1', port=7497, clientId=1)
 
 orders: list[dict] = []
 
-start_date = date(2022, 11,21)
-end_date = date(2022, 11, 21)
+start_date = date(2022, 1,1)
+end_date = date(2022, 11, 25)
 dates = utilities.daterange(start_date, end_date)
 for today_date in dates:
     print(today_date)
@@ -98,12 +98,10 @@ for today_date in dates:
     last_trading_start_date_time = datetime.combine(last_trading_date, market_start_time)
     last_trading_end_date_time = datetime.combine(last_trading_date, market_end_time)
     last_trading_date_data = all_data.loc[last_trading_start_date_time:last_trading_end_date_time]
-    print(last_trading_date_data)
 
     today_start_date_time = datetime.combine(today_date, market_start_time)
     today_end_date_time = datetime.combine(today_date, market_end_time)
     today_data = all_data.loc[today_start_date_time:today_end_date_time]
-    print(today_data)
 
     pre_market_start_date_time = datetime.combine(today_date, pre_market_start_time)
     pre_market_end_date_time = datetime.combine(today_date, market_start_time)
@@ -134,8 +132,15 @@ for today_date in dates:
 
     print(f"We going to make a {market_direction} trade")
 
+    last_trading_five_min_time = time(15, 55)
+    last_trading_five_min_start = datetime.combine(last_trading_date, last_trading_five_min_time)
+    last_trading_day_data_last_five_min = last_trading_date_data.loc[last_trading_five_min_start:last_trading_end_date_time]
     # Everything fine we are about to make order
-    take_profit = min(last_trading_date_data["Low"][:-5]) if market_direction == "BUY" else max(last_trading_date_data["High"][:-5])
+    if market_direction == 'BUY':
+        take_profit = min(last_trading_day_data_last_five_min["Low"])
+    elif market_direction == 'SELL':
+        take_profit = max(last_trading_day_data_last_five_min["High"])
+
     risk = 16000
     quantity = calc_quantity(risk, today_open)
 
@@ -153,7 +158,10 @@ for today_date in dates:
         "volume": sum(pre_market_data["Volume"]) * 100
     }
 
-    trading_candles = today_data.iloc[:-10]
+    trading_end_time = time(15, 50)
+    trading_candles_start_date_time = datetime.combine(today_date, market_start_time)
+    trading_candles_end_date_time = datetime.combine(today_date, trading_end_time)
+    trading_candles = all_data.loc[trading_candles_start_date_time:trading_candles_end_date_time]
 
     first_five_mins_bars = trading_candles.iloc[:5]
     op = first_five_mins_bars['Open']
@@ -170,22 +178,12 @@ for today_date in dates:
     for patten, _data in patterns.items():
         for _time, is_pattern in _data.items():
             if is_pattern:
-                action = "SELL" if is_pattern < 0 else "BUY"
-                if action == market_direction:
-                    pattern_to_save = {
-                        "time": str(_time),
-                        "Close": first_five_mins_bars.loc[_time]["Close"],
-                        "High": first_five_mins_bars.loc[_time]["High"],
-                        "Low": first_five_mins_bars.loc[_time]["Low"],
-                        "Open": first_five_mins_bars.loc[_time]["Open"],
-                        "Volume": first_five_mins_bars.loc[_time]["Volume"],
-                        "pattern": talib_utilities.get_candlestick_pattern_label(patten),
-                        "direction": action
-                    }
-                    patterns_to_save.append(pattern_to_save)
-
-    
-    order["patterns"] = patterns_to_save
+                pattern_to_save = {
+                    "time": str(_time),
+                    "pattern": talib_utilities.get_candlestick_pattern_label(patten),
+                    "direction": "SELL" if is_pattern < 0 else "BUY"
+                }
+                patterns_to_save.append(pattern_to_save)
 
     last_bar_index = trading_candles.index[-1]
     for index, bar in trading_candles.iterrows():
@@ -197,16 +195,35 @@ for today_date in dates:
             order["exit_at_price"] = take_profit
             order["exit_at_time"] = index
             order["pl"] = trading_calculations.pl(order["buy_point"], quantity, take_profit, market_direction, 1.8)
+            order["pattern"] = "N/A"
+            order["pattern_time"] = "N/A"
+            order["pattern_direction"] = "N/A"
+            if len(patterns_to_save) != 0:
+                for pattern in patterns_to_save:
+                    order["pattern"] = pattern["pattern"]
+                    order["pattern_time"] = pattern["time"]
+                    order["pattern_direction"] = pattern["direction"]
+
             orders.append(order)
             break
-
+        
         if index == last_bar_index:
             order["lowest_point"] = min(trading_candles["Low"][:index])
             order["highest_point"] = max(trading_candles["High"][:index])
             order["exit_at_price"] = bar["Close"]
             order["exit_at_time"] = index
             order["pl"] = trading_calculations.pl(order["buy_point"], quantity, bar["Close"], market_direction, 1.8)
+            order["pattern"] = "N/A"
+            order["pattern_time"] = "N/A"
+            order["pattern_direction"] = "N/A"
+            if len(patterns_to_save) != 0:
+                for pattern in patterns_to_save:
+                    order["pattern"] = pattern["pattern"]
+                    order["pattern_time"] = pattern["time"]
+                    order["pattern_direction"] = pattern["direction"]
+
             orders.append(order)
+                    
 
 keys = orders[0].keys()
 with open(f'orders-{start_date.strftime("%Y")}.csv', 'w', newline='') as output_file:
