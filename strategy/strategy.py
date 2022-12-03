@@ -18,10 +18,11 @@ class strategy:
 
     def __init__(
         self, 
-        date: date,
+        start_date: date,
+        end_date: date,
         start_time: time,
         end_time: time,
-        symbol: str,
+        symbols: list[str],
         data_provider: DataProvider=DataProvider.BARS_API, 
         ib_app: IB=None, 
         candlestick_patterns: list[str]=[],
@@ -34,9 +35,7 @@ class strategy:
         self.data_provider = data_provider
 
         self.commition = commition
-        self.symbol = symbol
-        self.start_datetime = datetime.combine(date, start_time)
-        self.end_datetime = datetime.combine(date, end_time)
+        self.symbols = symbols
         self.candlestick_patterns = candlestick_patterns
 
         self.market_data = None
@@ -45,11 +44,12 @@ class strategy:
 
     def start(self):
         market_data = self.get_data(self.start_datetime, self.end_datetime, self.symbol)
-        market_data_with_candlestick_patterns = self.add_candlestick_patterns_marketdata(self.candlestick_patterns, market_data)
-        self.market_data = market_data_with_candlestick_patterns
-        for index, bar in market_data_with_candlestick_patterns.iterrows():
-            self.current_bar_idx = index
-            self.execute_order(10, 10, 10)
+        self.add_candlestick_patterns_marketdata(self.candlestick_patterns, market_data)
+        self.market_data = market_data
+        print(market_data)
+        # for index, bar in market_data.iterrows():
+        #     self.current_bar_idx = index
+        #     self.execute_order(10, 10, 10)
 
     def execute_order(self, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
         order = {
@@ -76,11 +76,11 @@ class strategy:
 
         self.orders.append(order)
     
-    def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str):
+    def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
         return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
     
     @staticmethod
-    def add_candlestick_patterns_marketdata(candlestick_patterns: list[str], market_data: DataFrame) -> DataFrame:
+    def add_candlestick_patterns_marketdata(candlestick_patterns: list[str], market_data: DataFrame):
         if not len(candlestick_patterns):
             return market_data
         op = market_data['Open']
@@ -97,7 +97,6 @@ class strategy:
                 else:
                     patterns[index] = 'N/A'
             market_data[candle] = patterns
-        return market_data
 
     @staticmethod
     def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
