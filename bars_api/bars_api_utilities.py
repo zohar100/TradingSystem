@@ -24,8 +24,10 @@ class bars_api_utilities:
     @staticmethod
     def format_bars_resonse(response: Response) -> pd.DataFrame:
         df = pd.DataFrame.from_dict(response.json())
+        if not len(df.columns):
+            return df
         df.rename(columns={
-            'dateAndTime': 'Date',
+            'dateAndTime': 'Datetime',
             'open': 'Open',
             'high': 'High',
             'low': 'Low',
@@ -33,5 +35,5 @@ class bars_api_utilities:
             'volume': 'Volume'
         }, inplace=True)
         df.drop(['symbol', 'type', '__v'], axis=1, inplace=True)
-        df.set_index('Date', inplace=True)
+        df.set_index('Datetime', inplace=True)
         return df
