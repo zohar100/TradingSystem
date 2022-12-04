@@ -15,7 +15,7 @@ new_strategy = strategy(
     symbols=["AAPL"], 
     candlestick_patterns=candlestick_patterns, 
     momentum_indicators=["RSI"], 
-    # volume_indicators=["VWAP"]
+    volume_indicators=["VWAP"]
 )
 
 new_strategy.start()
