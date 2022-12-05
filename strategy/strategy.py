@@ -62,6 +62,7 @@ class strategy:
             if not trading_utilities.is_trading_day(date):
                 print(f"Market is close on {date}")
                 continue
+            self.before_run_logic(date)
             self.market_data = {}
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
@@ -73,6 +74,10 @@ class strategy:
                 self.market_data[symbol] = market_data
                 self.run_logic(symbol, market_data)
     
+    def before_run_logic(self, date: date):
+        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
+        pass
+
     def run_logic(self, symbol: str, market_data: DataFrame):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass

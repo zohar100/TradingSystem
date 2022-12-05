@@ -22,7 +22,6 @@ class gap_reversal(strategy):
             self,
             start_date=start_date,
             end_date=end_date,
-            # NEED ADD FILTER STOCKS LOGIC TO GET GOOD STOCKS TO TRADE
             symbols=list(self.stocks.keys()),
             start_time=strategy_start_time,
             end_time=strategy_end_time,
@@ -30,6 +29,10 @@ class gap_reversal(strategy):
             momentum_indicators=["RSI"]
         )
         pass
+
+    def before_run_logic(self, date: date):
+        super().before_run_logic(date)
+        # RUN LOGIC TO FIND CHOSENSTOCKS
     
     def run_logic(self, symbol: str, market_data: DataFrame):
         super().run_logic(symbol, market_data)
