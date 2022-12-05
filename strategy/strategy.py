@@ -64,9 +64,12 @@ class strategy:
                 talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
                 talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
                 talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
-                print(market_data)
                 self.market_data[symbol] = market_data
-            #RUN STRATEGY LOGIC WITH THE COLLECTED DATA
+                self.run_logic(symbol, market_data)
+    
+    def run_logic(self, symbol: str, market_data: DataFrame):
+        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
+        pass
 
     def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
         order = {
