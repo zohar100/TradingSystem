@@ -61,3 +61,49 @@ candlestick_pattern_label = {
     "CDLUPSIDEGAP2CROWS": "Upside Gap Two Crows",
     "CDLXSIDEGAP3METHODS": "Upside/Downside Gap Three Methods",
 }
+
+momentum_indicator_label = {
+    'ADX': "Average Directional Movement", 
+    'ADXR': "Average Directional Movement Index Rating", 
+    'APO': "Absolute Price Oscillator", 
+    'AROON': "Aroon", 
+    'AROONOSC': "Aroon Oscillator", 
+    'BOP': "Balance Of Power", 
+    'CCI': "Commodity Channel Index",
+    'CMO': "Chande Momentum Oscillator", 
+    'DX': "Directional Movement Index", 
+    'MACD': "Moving Average Convergence/Divergence", 
+    'MACDEXT': "MACD with controllable MA type", 
+    'MACDFIX': "Moving Average Convergence/Divergence Fix 12/26", 
+    'MFI': "Money Flow Index", 
+    'MINUS_DI': "Minus Directional Indicator", 
+    'MINUS_DM': "Minus Directional Movement", 
+    'MOM': "Momentum", 
+    'PLUS_DI': "Plus Directional Indicator", 
+    'PLUS_DM': "Plus Directional Movement", 
+    'PPO': "Percentage Price Oscillator", 
+    'ROC': "Rate of change : ((price/prevPrice)-1)*100", 
+    'ROCP': "Rate of change Percentage: (price-prevPrice)/prevPrice", 
+    'ROCR': "Rate of change ratio: (price/prevPrice)", 
+    'ROCR100': "Rate of change ratio 100 scale: (price/prevPrice)*100", 
+    'RSI': "Relative Strength Index", 
+    'STOCH': "Stochastic", 
+    'STOCHF': "Stochastic Fast", 
+    'STOCHRSI': "Stochastic Relative Strength Index", 
+    'TRIX': "1-day Rate-Of-Change (ROC) of a Triple Smooth EMA", 
+    'ULTOSC': "Ultimate Oscillator",
+    'WILLR': "Williams' %R",
+}
+
+volume_indicator_label = {
+    'AD': "Chaikin A/D Line",
+    'ADOSC': "Chaikin A/D Oscillator", 
+    'OBV': "On Balance Volume",
+    'VWAP': 'Volume-Weighted Average Price'
+}
+
+volatility_indicator_label = {
+    'ATR': "Average True Range", 
+    'NATR': "Normalized Average True Range", 
+    'TRANGE': "True Range"
+}
