@@ -43,6 +43,7 @@ class strategy:
         self.orders = []
 
     def start(self):
+<<<<<<< Updated upstream
         market_data = self.get_data(self.start_datetime, self.end_datetime, self.symbol)
         self.add_candlestick_patterns_marketdata(self.candlestick_patterns, market_data)
         self.market_data = market_data
@@ -50,6 +51,31 @@ class strategy:
         # for index, bar in market_data.iterrows():
         #     self.current_bar_idx = index
         #     self.execute_order(10, 10, 10)
+=======
+        for date in utilities.daterange(self.start_date, self.end_date):
+            if not trading_utilities.is_trading_day(date):
+                print(f"Market is close on {date}")
+                continue
+            self.before_run_logic(date)
+            self.market_data = {}
+            start_datetime = datetime.combine(date, self.strategy_start_time)
+            end_datetime = datetime.combine(date, self.strategy_end_time)
+            for symbol in self.symbols:
+                market_data = self.get_data(start_datetime, end_datetime, symbol)
+                talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
+                talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
+                talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
+                self.market_data[symbol] = market_data
+                self.run_logic(symbol, market_data)
+    
+    def before_run_logic(self, date: date):
+        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
+        pass
+
+    def run_logic(self, symbol: str, market_data: DataFrame):
+        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
+        pass
+>>>>>>> Stashed changes
 
     def execute_order(self, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
         order = {
