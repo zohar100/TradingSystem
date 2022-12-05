@@ -36,4 +36,5 @@ class bars_api_utilities:
         }, inplace=True)
         df.drop(['symbol', 'type', '__v'], axis=1, inplace=True)
         df.set_index('Datetime', inplace=True)
+        df.index = pd.to_datetime(df.index, format="%Y-%m-%dT%H:%M:%S")
         return df

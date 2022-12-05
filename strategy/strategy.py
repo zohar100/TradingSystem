@@ -8,6 +8,8 @@ import yfinance
 from pandas import DataFrame
 from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
+from talib_utilities import talib_utilities
+from utilities import utilities
 
 class DataProvider(str, Enum):
     IB_API='ib_api',
@@ -25,38 +27,41 @@ class strategy:
         symbols: list[str],
         data_provider: DataProvider=DataProvider.BARS_API, 
         ib_app: IB=None, 
+        commition: float = 1.8,
         candlestick_patterns: list[str]=[],
-        commition: float = 1.8
+        momentum_indicators: list[str]=[],
+        volume_indicators: list[str]=[],
     ) -> None:
+
+        assert len(symbols) != 0, "Must provide at least one symbol"
+
         if data_provider == DataProvider.IB_API:
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
             self.ib_app = ib_app
+
+        self.start_date = start_date
+        self.end_date = end_date
+
+        self.strategy_start_time = start_time
+        self.strategy_end_time = end_time
         
         self.data_provider = data_provider
 
         self.commition = commition
         self.symbols = symbols
         self.candlestick_patterns = candlestick_patterns
+        self.momentum_indicators = momentum_indicators
+        self.volume_indicators = volume_indicators
 
-        self.market_data = None
-        self.current_bar_idx = None
-        self.orders = []
+        self.market_data: dict[str, DataFrame] = {}
+        self.current_bar_idx: str = None
+        self.orders: list[dict] = []
 
     def start(self):
-<<<<<<< Updated upstream
-        market_data = self.get_data(self.start_datetime, self.end_datetime, self.symbol)
-        self.add_candlestick_patterns_marketdata(self.candlestick_patterns, market_data)
-        self.market_data = market_data
-        print(market_data)
-        # for index, bar in market_data.iterrows():
-        #     self.current_bar_idx = index
-        #     self.execute_order(10, 10, 10)
-=======
         for date in utilities.daterange(self.start_date, self.end_date):
             if not trading_utilities.is_trading_day(date):
                 print(f"Market is close on {date}")
                 continue
-            self.before_run_logic(date)
             self.market_data = {}
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
@@ -68,16 +73,11 @@ class strategy:
                 self.market_data[symbol] = market_data
                 self.run_logic(symbol, market_data)
     
-    def before_run_logic(self, date: date):
-        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
-        pass
-
     def run_logic(self, symbol: str, market_data: DataFrame):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
->>>>>>> Stashed changes
 
-    def execute_order(self, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
+    def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
         order = {
             "datetime": self.current_bar_idx,
             "action": action,
@@ -85,8 +85,8 @@ class strategy:
             "take_point": take_profit,
             "stop_loss": stop_loss
         }
-        last_marketdata_index = self.market_data.index[-1]
-        marketdata_from_index_to_end = self.market_data[self.current_bar_idx:]
+        last_marketdata_index = self.market_data[symbol].index[-1]
+        marketdata_from_index_to_end = self.market_data[symbol][self.current_bar_idx:]
         for index, bar in marketdata_from_index_to_end.iterrows():
             pl = trading_utilities.check_pl(action, bar, take_profit, stop_loss)
             if pl:
@@ -104,25 +104,6 @@ class strategy:
     
     def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
         return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
-    
-    @staticmethod
-    def add_candlestick_patterns_marketdata(candlestick_patterns: list[str], market_data: DataFrame):
-        if not len(candlestick_patterns):
-            return market_data
-        op = market_data['Open']
-        hi = market_data['High']
-        lo = market_data['Low']
-        cl = market_data['Close']
-        for candle in candlestick_patterns:
-            patterns = getattr(talib, candle)(op, hi, lo, cl)
-            for index,p in patterns.items():
-                if p > 0:
-                    patterns[index] = "BUY"
-                elif p < 0:
-                    patterns[index] = "SELL"
-                else:
-                    patterns[index] = 'N/A'
-            market_data[candle] = patterns
 
     @staticmethod
     def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
