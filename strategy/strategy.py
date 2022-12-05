@@ -56,6 +56,9 @@ class strategy:
 
     def start(self):
         for date in utilities.daterange(self.start_date, self.end_date):
+            if not trading_utilities.is_trading_day(date):
+                print(f"Market is close on {date}")
+                continue
             self.market_data = {}
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
