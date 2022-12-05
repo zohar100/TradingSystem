@@ -32,6 +32,9 @@ class strategy:
         momentum_indicators: list[str]=[],
         volume_indicators: list[str]=[],
     ) -> None:
+
+        assert len(symbols) != 0, "Must provide at least one symbol"
+
         if data_provider == DataProvider.IB_API:
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
             self.ib_app = ib_app
