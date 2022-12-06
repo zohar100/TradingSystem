@@ -36,6 +36,6 @@ class gap_reversal(strategy):
     
     def run_logic(self, symbol: str, market_data: DataFrame):
         super().run_logic(symbol, market_data)
-        print(symbol)
-        print(market_data)
+        for bar in market_data.iterrows():
+            print(bar)
 
