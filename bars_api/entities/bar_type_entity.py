@@ -1,4 +1,4 @@
 from enum import Enum
 
-class BarType (Enum):
+class BarType (str, Enum):
     ONE = "1"

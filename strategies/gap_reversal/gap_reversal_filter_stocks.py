@@ -7,25 +7,31 @@ from strategy import DataProvider
 from datetime import date, datetime
 from trading_utilities import trading_utilities, pre_market_start_time, market_end_time, market_start_time
 from .gap_reversal_models import ChosenStock
+from ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
+from bars_api import bars_api, BarType as HttpBarTypes, get_bars_dto as get_http_bars_dto
+from .gap_reversal_models import db
 
 class gap_reversal_filter_stocks:
-    def __init__(self, symbols_list: list[str], date: date, api_provider: DataProvider, app: IB):
+    def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB):
 
         # assert len(symbols_list) > 0, "Symbols list is empty"
         assert date is not None, "Date most be set"
 
-        if api_provider == DataProvider.IB_API:
-            assert app is not None, "If IB is the provider app is required" 
+        if data_provider == DataProvider.IB_API:
+            assert ib_app is not None, "If IB is the provider app is required" 
         
-        self.api_provider = api_provider
+        db.connect()
+        db.drop_tables([ChosenStock])
+        db.create_tables([ChosenStock])
+
+        self.data_provider = data_provider
         
-        self.app = app
+        self.ib_app = ib_app
 
         self.symbols_list = symbols_list
         self.date = date
 
-        self.last_trading_date = datetime.strptime(
-            trading_utilities.last_trading_date(self.date), "%Y%m%d")
+        self.last_trading_date = trading_utilities.get_last_trading_date(self.date)
 
         self.chosen_stocks: list[ChosenStock] = []
 
@@ -64,28 +70,30 @@ class gap_reversal_filter_stocks:
         start_date_time = datetime.combine(self.last_trading_date, market_start_time)
         end_date_time = datetime.combine(self.last_trading_date, market_end_time)
         
-        if self.api_provider == DataProvider.BARS_API:
-            bar_params = get_bars_params(BarType.ONE, [symbol], start_date_time, end_date_time)
-            bars = historical_api.get_bars(bar_params)
+        if self.data_provider == DataProvider.BARS_API:
+            bar_params = get_http_bars_dto(HttpBarTypes.ONE, [symbol], start_date_time, end_date_time)
+            bars = bars_api.get_bars(bar_params)
             return bars
         else:
-            bar_params = get_bars_params_ib(BarType.ONE symbol, start_date_time, end_date_time, self.valid_req_id)
-            bars = ib_api.get_bars(self.app, bar_params)
+            bar_params = get_ib_bars_dto(IbBarTypes.ONE, symbol, start_date_time, end_date_time)
+            bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars
     
-    def get_bars_from_market_open_time(self, symbol: str) -> list[Bar]:
+    def get_bars_from_market_open_time(self, symbol: str) -> DataFrame:
         start_date_time = datetime.combine(self.date, pre_market_start_time)
         end_date_time = datetime.combine(self.date, market_start_time)
         
-        if self.api_provider == DataProvider.BARS_API:
-            bar_params = get_bars_params(BarType.ONE, [symbol], start_date_time, end_date_time)
-            bars = historical_api.get_bars(bar_params)
+        if self.data_provider == DataProvider.BARS_API:
+            bar_params = get_http_bars_dto(HttpBarTypes.ONE, [symbol], start_date_time, end_date_time)
+            bars = bars_api.get_bars(bar_params)
             return bars
         else:
-            bar_params = get_bars_params_ib(BarType.ONE, symbol, start_date_time, end_date_time, self.valid_req_id)
-            bars = ib_api.get_bars(self.app, bar_params)
+            bar_params = get_ib_bars_dto(IbBarTypes.ONE, symbol, start_date_time, end_date_time)
+            bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars  
     
-    def check_for_chosen_stock(self) -> ChosenStock or None:
-        pass
+    def check_for_chosen_stock(self, symbol: str, last_trading_day_bars: DataFrame, bars_from_market_open_time: DataFrame) -> ChosenStock or None:
+        print(symbol)
+        print(last_trading_day_bars)
+        print(bars_from_market_open_time)
     

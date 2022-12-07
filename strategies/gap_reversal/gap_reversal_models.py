@@ -7,9 +7,9 @@ from peewee import *
 
 load_dotenv('../.env')
 
-db_name = config('DB_NAME')
-db_user = config('DB_USER')
-db_password = config('DB_PASSWORD')
+db_name = config('DB_NAME', 'gap_reversal')
+db_user = config('DB_USER', 'postgres')
+db_password = config('DB_PASSWORD', 'password')
 db_host = config('DB_HOST', 'localhost')
 db_port = config('DB_PORT', 5432)
 

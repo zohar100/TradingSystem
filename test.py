@@ -11,13 +11,13 @@ start_date = date(2021, 11, 22)
 start_time = time(9, 30)
 end_time = time(10, 30)
 
-# gap_reversal_test = gap_reversal(start_date, start_date)
+gap_reversal_test = gap_reversal(start_date, start_date)
 
-# gap_reversal_test.start()
+gap_reversal_test.start()
 
-app = IB()
-app.connect(host='127.0.0.1', port=7497, clientId=1)
+# app = IB()
+# app.connect(host='127.0.0.1', port=7497, clientId=1)
 
-params = get_bars_dto('1 min', 'AAPL', datetime.combine(start_date,start_time), datetime.combine(start_date,end_time))
-bars = ib_api.get_bars(app, params)
-print(bars)
+# params = get_bars_dto('1 min', 'AAPL', datetime.combine(start_date,start_time), datetime.combine(start_date,end_time))
+# bars = ib_api.get_bars(app, params)
+# print(bars)
