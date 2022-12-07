@@ -20,4 +20,4 @@ app.connect(host='127.0.0.1', port=7497, clientId=1)
 
 params = get_bars_dto('1 min', 'AAPL', datetime.combine(start_date,start_time), datetime.combine(start_date,end_time))
 bars = ib_api.get_bars(app, params)
-print(bars) 
+print(bars)
