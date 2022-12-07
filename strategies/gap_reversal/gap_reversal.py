@@ -34,7 +34,7 @@ class gap_reversal(strategy):
     def before_run_logic(self, date: date):
         super().before_run_logic(date)
         print("before_run_logic")
-        filter_stock_service = gap_reversal_filter_stocks(api_symbols_list[:10], date, self.data_provider, self.ib_app)
+        filter_stock_service = gap_reversal_filter_stocks(["AYTU", "MRNA", "PDD"], date, self.data_provider, self.ib_app)
         filter_stock_service.get_chosen_stocks()
         # RUN LOGIC TO FIND CHOSENSTOCKS
     

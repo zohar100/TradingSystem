@@ -10,6 +10,7 @@ from .gap_reversal_models import ChosenStock
 from ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
 from bars_api import bars_api, BarType as HttpBarTypes, get_bars_dto as get_http_bars_dto
 from .gap_reversal_models import db
+from trading_calculations import trading_calculations
 
 class gap_reversal_filter_stocks:
     def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB):
@@ -92,8 +93,40 @@ class gap_reversal_filter_stocks:
             bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars  
     
-    def check_for_chosen_stock(self, symbol: str, last_trading_day_bars: DataFrame, bars_from_market_open_time: DataFrame) -> ChosenStock or None:
-        print(symbol)
-        print(last_trading_day_bars)
-        print(bars_from_market_open_time)
-    
+    def check_for_chosen_stock(self, symbol: str, last_trading_day_bars: DataFrame, pre_market_to_open_bars: DataFrame) -> ChosenStock or None:
+        last_day_volume = last_trading_day_bars["Volume"].values
+        is_last_day_had_volume_zero = 0 in last_day_volume
+        if is_last_day_had_volume_zero:
+            return None
+        
+        pre_market_volume = sum(pre_market_to_open_bars["Volume"].values[:-2])
+        is_pre_market_volume_under_hundred_thousands = pre_market_volume < 100000
+        if is_pre_market_volume_under_hundred_thousands:
+            return None
+
+        close_price = pre_market_to_open_bars["Close"].values[-3]
+        is_close_price_under_or_equal_ten = close_price <= 10
+        if is_close_price_under_or_equal_ten:
+            return None
+        
+        yesterday_close_price = last_trading_day_bars["Close"].values[-1]
+        today_open_price = pre_market_to_open_bars["Open"].values[-1]
+        is_sell_gap = today_open_price <= (yesterday_close_price * 0.97)
+        is_buy_gap = today_open_price >= (yesterday_close_price * 1.03)
+        if not is_sell_gap and not is_buy_gap:
+            return None
+        
+        direction = 'SELL' if is_sell_gap else 'BUY' 
+        gap = trading_calculations.gap_percentage(today_open_price, yesterday_close_price, direction)
+
+        return ChosenStock(
+            symbol=symbol,
+            action=direction,
+            yesterday_close=yesterday_close_price, 
+            today_open=today_open_price, 
+            date=self.date,
+            pre_market_volume=pre_market_volume,
+            gap=gap,
+            closest_support=0,
+            next_closest_support=0
+        )

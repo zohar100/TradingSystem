@@ -10,6 +10,8 @@ from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
 from talib_utilities import talib_utilities
 from utilities import utilities
+from ib_api import ib_api
+from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
 
 class DataProvider(str, Enum):
     IB_API='ib_api',
@@ -111,8 +113,10 @@ class strategy:
     def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
         return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
 
-    @staticmethod
     def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
+        params = get_ib_bars_dto("1", [symbol], start_date_time, end_date_time)
+        data = ib_api.get_bars(self.ib_app ,params)
+        return data
         pass
 
     @staticmethod
