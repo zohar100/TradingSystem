@@ -24,3 +24,9 @@ class trading_calculations:
     @staticmethod
     def bar_size(high: float, low: float):
         return high - low
+    
+    @staticmethod
+    def change(high: float, low: float):
+        bar_size = trading_calculations.bar_size(high, low)
+        change = bar_size * 0.25
+        return change

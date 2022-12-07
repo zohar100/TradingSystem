@@ -15,3 +15,9 @@ class utilities:
         c = stop_orders_at - start_orders_at
         minute_duration = int(c.total_seconds() / 60) + 1
         return minute_duration
+    
+    @staticmethod
+    def merge_two_dicts(x: dict, y: dict):
+        z = x.copy()   # start with keys and values of x
+        z.update(y)    # modifies z with keys and values of y
+        return z

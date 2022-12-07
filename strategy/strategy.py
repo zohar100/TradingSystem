@@ -34,8 +34,6 @@ class strategy:
         momentum_indicators: list[str]=[],
         volume_indicators: list[str]=[],
     ) -> None:
-
-        assert len(symbols) != 0, "Must provide at least one symbol"
         
         self.ib_app = None
         if data_provider == DataProvider.IB_API:
@@ -85,16 +83,17 @@ class strategy:
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
 
-    def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, stop_loss: float=None):
+    def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, current_bar_idx, stop_loss: float=None, extra_fields: dict={}):
         order = {
-            "datetime": self.current_bar_idx,
+            "datetime": current_bar_idx,
             "action": action,
             "buy_point": buy_point,
             "take_point": take_profit,
             "stop_loss": stop_loss
         }
+        order = utilities.merge_two_dicts(order, extra_fields)
         last_marketdata_index = self.market_data[symbol].index[-1]
-        marketdata_from_index_to_end = self.market_data[symbol][self.current_bar_idx:]
+        marketdata_from_index_to_end = self.market_data[symbol][current_bar_idx:]
         for index, bar in marketdata_from_index_to_end.iterrows():
             pl = trading_utilities.check_pl(action, bar, take_profit, stop_loss)
             if pl:
