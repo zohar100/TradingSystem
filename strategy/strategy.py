@@ -83,7 +83,7 @@ class strategy:
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
 
-    def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, current_bar_idx, stop_loss: float=None, extra_fields: dict={}):
+    def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, current_bar_idx, stop_loss: float=None, extra_fields: dict={}, cancel_order_after: int=0):
         order = {
             "datetime": current_bar_idx,
             "action": action,
@@ -94,6 +94,26 @@ class strategy:
         order = utilities.merge_two_dicts(order, extra_fields)
         last_marketdata_index = self.market_data[symbol].index[-1]
         marketdata_from_index_to_end = self.market_data[symbol][current_bar_idx:]
+
+        if cancel_order_after:
+            cancel_index = marketdata_from_index_to_end.index[:cancel_order_after][-1]
+            marketdata_from_index_to_cancel_index = marketdata_from_index_to_end[:cancel_index]
+            buy_point_bar = None
+            for index, bar in marketdata_from_index_to_cancel_index.iterrows():
+                if buy_point_bar is not None:
+                    continue
+                buy_point_bar = trading_utilities.is_bar_reach_to_buy_point(action, bar, buy_point)
+
+            if buy_point_bar is not None:
+                order['enter_position_at'] = index
+            else:
+                order['enter_position_at'] = 'N/A'
+                order["exit_at_price"] = 'N/A'
+                order["exit_at_time"] = 'N/A'
+                order["pl"] = 'N/A'
+                self.orders.append(order)
+                return
+
         for index, bar in marketdata_from_index_to_end.iterrows():
             pl = trading_utilities.check_pl(action, bar, take_profit, stop_loss)
             if pl:
@@ -113,7 +133,7 @@ class strategy:
         return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
 
     def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_ib_bars_dto("1 min", [symbol], start_date_time, end_date_time)
+        params = get_ib_bars_dto("1 min", symbol, start_date_time, end_date_time)
         data = ib_api.get_bars(self.ib_app ,params)
         return data
         pass

@@ -10,6 +10,7 @@ class ib_api_utilities:
         dict_list = [bar.__dict__ for bar in response]
         for bar in dict_list:
             bar["date"] = bar["date"].astimezone(new_york_timezone)
+            bar["volume"] = bar["volume"] * 100
         df = pd.DataFrame.from_dict(dict_list)
         if not len(df.columns):
             return df

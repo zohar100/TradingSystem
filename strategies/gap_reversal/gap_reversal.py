@@ -32,8 +32,8 @@ class gap_reversal(strategy):
             symbols=[],
             start_time=strategy_start_time,
             end_time=strategy_end_time,
-            data_provider=DataProvider.IB_API,
-            ib_app=ib_app,
+            # data_provider=DataProvider.IB_API,
+            # ib_app=ib_app,
             candlestick_patterns=self.candlestick_patterns,
             momentum_indicators=["RSI"]
         )
@@ -72,7 +72,7 @@ class gap_reversal(strategy):
                 take_profit = gap_reversal_calculation.take_profit(stock_direction, buy_point, stop_loss)
                 quantity = gap_reversal_calculation.quntity(stock_direction, buy_point, stop_loss, 50)
                 extra_fields = { "pattern": candle_pattern }
-                self.execute_order(symbol, stock_direction, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields)
+                self.execute_order(symbol, stock_direction, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields, 3)
 
             keys = self.orders[0].keys()
             with open(f'orders-test.csv', 'w', newline='') as output_file:

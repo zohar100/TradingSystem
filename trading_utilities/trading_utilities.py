@@ -1,3 +1,5 @@
+from typing import Literal
+from pandas import DataFrame
 import pandas as pd
 import pandas_market_calendars as mcal
 import datetime
@@ -31,7 +33,7 @@ class trading_utilities:
         return last_trading_date
     
     @staticmethod
-    def check_pl(action: str, bar: pd.DataFrame, take_profit: float, stop_loss: float = None):
+    def check_pl(action: str, bar: DataFrame, take_profit: float, stop_loss: float = None):
         if action == "BUY":
             if bar["High"] >= take_profit or bar["Close"] >= take_profit:
                 return "P"
@@ -42,5 +44,16 @@ class trading_utilities:
                 return "P"
             elif stop_loss and (bar["High"] >= stop_loss or bar["Close"] >= stop_loss):
                 return "L"
+
+        return None
+    
+    @staticmethod
+    def is_bar_reach_to_buy_point(action: Literal['BUY', 'SELL'], bar: DataFrame, buy_point: float):
+        if action == 'BUY':
+            if bar['High'] > buy_point:
+                return bar
+        elif action == 'SELL':
+            if bar['Low'] < buy_point:
+                return bar
 
         return None

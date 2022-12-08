@@ -8,8 +8,6 @@ from ib_api.dto.get_bars_dto import get_bars_dto
 from ib_insync import IB
 
 start_date = date(2020, 4, 2)
-start_time = time(9, 30)
-end_time = time(10, 30)
 
 gap_reversal_test = gap_reversal(start_date, start_date)
 
