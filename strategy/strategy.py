@@ -113,7 +113,7 @@ class strategy:
         return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
 
     def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_ib_bars_dto("1", [symbol], start_date_time, end_date_time)
+        params = get_ib_bars_dto("1 min", [symbol], start_date_time, end_date_time)
         data = ib_api.get_bars(self.ib_app ,params)
         return data
         pass

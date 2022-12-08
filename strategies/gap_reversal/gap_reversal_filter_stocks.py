@@ -72,11 +72,11 @@ class gap_reversal_filter_stocks:
         end_date_time = datetime.combine(self.last_trading_date, market_end_time)
         
         if self.data_provider == DataProvider.BARS_API:
-            bar_params = get_http_bars_dto(HttpBarTypes.ONE, [symbol], start_date_time, end_date_time)
+            bar_params = get_http_bars_dto(HttpBarTypes.ONE.value, [symbol], start_date_time, end_date_time)
             bars = bars_api.get_bars(bar_params)
             return bars
         else:
-            bar_params = get_ib_bars_dto(IbBarTypes.ONE, symbol, start_date_time, end_date_time)
+            bar_params = get_ib_bars_dto(IbBarTypes.ONE.value, symbol, start_date_time, end_date_time)
             bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars
     
@@ -85,11 +85,11 @@ class gap_reversal_filter_stocks:
         end_date_time = datetime.combine(self.date, market_start_time)
         
         if self.data_provider == DataProvider.BARS_API:
-            bar_params = get_http_bars_dto(HttpBarTypes.ONE, [symbol], start_date_time, end_date_time)
+            bar_params = get_http_bars_dto(HttpBarTypes.ONE.value, [symbol], start_date_time, end_date_time)
             bars = bars_api.get_bars(bar_params)
             return bars
         else:
-            bar_params = get_ib_bars_dto(IbBarTypes.ONE, symbol, start_date_time, end_date_time)
+            bar_params = get_ib_bars_dto(IbBarTypes.ONE.value, symbol, start_date_time, end_date_time)
             bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars  
     

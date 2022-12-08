@@ -4,13 +4,14 @@ from datetime import time, date, datetime
 from pandas import DataFrame
 from bars_api import bars_api, get_bars_dto
 from trading_utilities import market_start_time
-from strategy import strategy
+from strategy import strategy, DataProvider
 from talib_utilities import candlestick_pattern_label
 from bars_api.bars_api_utilities import api_symbols_list
 
 from .gap_reversal_filter_stocks import gap_reversal_filter_stocks
 from .gap_reversal_models import ChosenStock
 from .gap_reversal_calculation import gap_reversal_calculation
+from ib_insync import IB
 
 strategy_start_time = market_start_time
 strategy_end_time = time(15, 50)
@@ -21,6 +22,9 @@ class gap_reversal(strategy):
         self.stocks: dict[str, ChosenStock] = {}
         self.candlestick_patterns = list(candlestick_pattern_label.keys())[:10]
 
+        ib_app = IB()
+        ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
+
         strategy.__init__(
             self,
             start_date=start_date,
@@ -28,6 +32,8 @@ class gap_reversal(strategy):
             symbols=[],
             start_time=strategy_start_time,
             end_time=strategy_end_time,
+            data_provider=DataProvider.IB_API,
+            ib_app=ib_app,
             candlestick_patterns=self.candlestick_patterns,
             momentum_indicators=["RSI"]
         )

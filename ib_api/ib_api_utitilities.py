@@ -1,12 +1,15 @@
 import pandas as pd
 
 from ib_insync import BarData
+from trading_utilities import new_york_timezone
 
 
 class ib_api_utilities:
     @staticmethod
     def format_bars_resonse(response: list[BarData]) -> pd.DataFrame:
         dict_list = [bar.__dict__ for bar in response]
+        for bar in dict_list:
+            bar["date"] = bar["date"].astimezone(new_york_timezone)
         df = pd.DataFrame.from_dict(dict_list)
         if not len(df.columns):
             return df
