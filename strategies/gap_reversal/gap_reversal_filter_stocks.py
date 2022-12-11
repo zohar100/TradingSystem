@@ -21,8 +21,8 @@ class gap_reversal_filter_stocks:
         if data_provider == DataProvider.IB_API:
             assert ib_app is not None, "If IB is the provider app is required" 
         
-        db.connect()
-        db.drop_tables([ChosenStock])
+        db.connection()
+        # db.drop_tables([ChosenStock])
         db.create_tables([ChosenStock])
 
         self.data_provider = data_provider

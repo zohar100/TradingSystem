@@ -74,6 +74,8 @@ class strategy:
                 talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
                 self.market_data[symbol] = market_data
                 self.run_logic(symbol, market_data)
+
+        self.after_run_logic(self.orders)
     
     def before_run_logic(self, date: date):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
@@ -82,14 +84,20 @@ class strategy:
     def run_logic(self, symbol: str, market_data: DataFrame):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
+    
+    def after_run_logic(self, orders: list[dict]):
+        # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
+        pass
 
     def execute_order(self, symbol: str, action: Literal['BUY', 'SELL'], buy_point: float, take_profit: float, quantity: int, current_bar_idx, stop_loss: float=None, extra_fields: dict={}, cancel_order_after: int=0):
         order = {
+            "symbol": symbol,
             "datetime": current_bar_idx,
             "action": action,
             "buy_point": buy_point,
             "take_point": take_profit,
-            "stop_loss": stop_loss
+            "stop_loss": stop_loss,
+            'quantiy': quantity
         }
         order = utilities.merge_two_dicts(order, extra_fields)
         last_marketdata_index = self.market_data[symbol].index[-1]
@@ -105,12 +113,13 @@ class strategy:
                 buy_point_bar = trading_utilities.is_bar_reach_to_buy_point(action, bar, buy_point)
 
             if buy_point_bar is not None:
-                order['enter_position_at'] = index
+                order['bp_filled_at'] = index
             else:
-                order['enter_position_at'] = 'N/A'
+                order['bp_filled_at'] = 'N/A'
                 order["exit_at_price"] = 'N/A'
                 order["exit_at_time"] = 'N/A'
-                order["pl"] = 'N/A'
+                order['pl'] = 'C'
+                order["pl_amount"] = 'N/A'
                 self.orders.append(order)
                 return
 
@@ -119,13 +128,15 @@ class strategy:
             if pl:
                 order["exit_at_price"] = take_profit if pl == "P" else stop_loss
                 order["exit_at_time"] = index
-                order["pl"] = trading_calculations.pl(order["buy_point"], quantity, take_profit, action, self.commition)
+                order['pl'] = pl
+                order["pl_amount"] = trading_calculations.pl(order["buy_point"], quantity, take_profit, action, self.commition)
                 break
             
             if index == last_marketdata_index:
                 order["exit_at_price"] = bar["Close"]
                 order["exit_at_time"] = index
-                order["pl"] = trading_calculations.pl(order["buy_point"], quantity, bar["Close"], action, self.commition)
+                order['pl'] = 'P' if trading_calculations.pl(order["buy_point"], quantity, bar["Close"], action, self.commition) > 0 else 'L'
+                order["pl_amount"] = trading_calculations.pl(order["buy_point"], quantity, bar["Close"], action, self.commition)
 
         self.orders.append(order)
     
