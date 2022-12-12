@@ -147,7 +147,6 @@ class strategy:
         params = get_ib_bars_dto("1 min", symbol, start_date_time, end_date_time)
         data = ib_api.get_bars(self.ib_app ,params)
         return data
-        pass
 
     @staticmethod
     def __get_data_yf_api(start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
