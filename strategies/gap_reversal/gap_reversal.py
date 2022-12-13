@@ -70,7 +70,17 @@ class gap_reversal(strategy):
             
             print(f"Found {len(candle_patterns)} orders opportunity at {datetime} for {symbol}")
             for candle_pattern in candle_patterns:
-                stop_loss = gap_reversal_calculation.stop_loss(stock_direction, bar["High"], bar["Low"])
+
+                stop_loss_high = bar["High"]
+                stop_loss_low = bar["Low"]
+                is_morning_star_patterns = candle_pattern in ["CDLMORNINGDOJISTAR", "CDLMORNINGSTAR"]
+                is_evening_star_patterns = candle_pattern in ["CDLEVENINGDOJISTAR", "CDLEVENINGSTAR"]
+                if is_morning_star_patterns:
+                    stop_loss_low = market_data["Low"][:datetime][-2]
+                if is_evening_star_patterns:
+                    stop_loss_high = market_data["High"][:datetime][-2]
+
+                stop_loss = gap_reversal_calculation.stop_loss(stock_direction, stop_loss_high, stop_loss_low)
                 buy_point = gap_reversal_calculation.buy_point(stock_direction, bar["Low"], bar["High"])
                 take_profit = gap_reversal_calculation.take_profit(stock_direction, buy_point, stop_loss)
                 try:
