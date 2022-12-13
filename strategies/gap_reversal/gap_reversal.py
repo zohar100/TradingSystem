@@ -11,6 +11,7 @@ from bars_api.bars_api_utilities import api_symbols_list
 from .gap_reversal_filter_stocks import gap_reversal_filter_stocks
 from .gap_reversal_models import ChosenStock
 from .gap_reversal_calculation import gap_reversal_calculation
+from .extended_talib import talib as extended_talib
 from ib_insync import IB
 import pandas as pd
 
@@ -36,6 +37,7 @@ class gap_reversal(strategy):
             end_time=strategy_end_time,
             # data_provider=DataProvider.IB_API,
             # ib_app=ib_app,
+            custom_talib_instance=extended_talib,
             candlestick_patterns=self.candlestick_patterns,
             momentum_indicators=["RSI"]
         )
