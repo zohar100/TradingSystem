@@ -19,7 +19,7 @@ class gap_reversal_filter_stocks:
         assert date is not None, "Date most be set"
 
         if data_provider == DataProvider.IB_API:
-            assert ib_app is not None, "If IB is the provider app is required" 
+            assert ib_app is not None, "If IB_API is the provider ib_app is required" 
         
         db.connection()
         # db.drop_tables([ChosenStock])
