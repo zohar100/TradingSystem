@@ -1,5 +1,6 @@
 
 
+from typing import Literal
 import numpy as np
 from pandas import DataFrame, Timestamp
 
@@ -31,3 +32,17 @@ class support_and_resistance:
             if len(min_list) == 5 and support_and_resistance.is_far_from_level(current_min, levels, df):
                 levels.append((low_range.idxmin(), current_min))
         return levels
+    
+    @staticmethod
+    def find_closest_support_point(action: Literal['BUY', 'SELL'], close_to_number: int, support_and_resistance_levels: list[tuple[Timestamp, float]]):
+        levels_numbers = [s[1] for s in support_and_resistance_levels]
+        closest = 0.0
+        if action == 'BUY':
+            for number in levels_numbers:
+                if number > close_to_number and (closest == 0 or number < closest):
+                    closest = number
+        elif action == 'SELL':
+            for number in levels_numbers:
+                if number < close_to_number and (closest == 0 or number > closest):
+                    closest = number
+        return closest
