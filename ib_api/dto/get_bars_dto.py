@@ -3,11 +3,12 @@ from ..entities.bar_type_entity import BarType
 from datetime import datetime
 
 class get_bars_dto:
-    def __init__(self, type: BarType, symbol: str, start_datetime: datetime, end_datetime: datetime):
+    def __init__(self, type: BarType, symbol: str, start_datetime: datetime, end_datetime: datetime, useRTH: bool=False):
         self.type =  type
         self.symbol = symbol
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
+        self.useRTH = useRTH
 
     def __dict__(self):
         return {
