@@ -25,7 +25,7 @@ def NEW_CDLGRAVESTONEDOJI(open: float, high: float, low: float, close: float):
 talib.CDLGRAVESTONEDOJI = NEW_CDLGRAVESTONEDOJI
 
 
-# ONLY SELL DETECTION
+# CHECK
 SUPER_CDLENGULFING = getattr(talib, "CDLENGULFING")
 def NEW_CDLENGULFING(open: float, high: float, low: float, close: float):
     results = SUPER_CDLENGULFING(open, high, low, close)
