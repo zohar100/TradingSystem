@@ -1,7 +1,7 @@
 import csv
 from datetime import time, date, datetime
 
-from pandas import DataFrame
+from pandas import DataFrame, Timestamp
 from bars_api import bars_api, get_bars_dto
 from trading_utilities import market_start_time
 from strategy import strategy, DataProvider
@@ -47,7 +47,7 @@ class gap_reversal(strategy):
         )
         pass
 
-    def before_run_logic(self, date: date):
+    def before_run_logic(self, date: date, support_resistance_levels: list[tuple[Timestamp, float]]):
         super().before_run_logic(date)
         filter_stock_service = gap_reversal_filter_stocks([], date, self.data_provider, self.ib_app)
         filter_stock_service.get_chosen_stocks()

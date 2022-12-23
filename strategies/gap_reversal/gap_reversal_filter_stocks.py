@@ -1,10 +1,12 @@
 
 
 
+from typing import Literal
 from ib_insync import IB
-from pandas import DataFrame
+from pandas import DataFrame, Timestamp
 from strategy import DataProvider
 from datetime import date, datetime
+from support_and_resistance.support_and_resistance import support_and_resistance
 from trading_utilities import trading_utilities, pre_market_start_time, market_end_time, market_start_time
 from .gap_reversal_models import ChosenStock
 from ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
@@ -13,7 +15,7 @@ from .gap_reversal_models import db
 from trading_calculations import trading_calculations
 
 class gap_reversal_filter_stocks:
-    def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB):
+    def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, support_and_resistance_levels: list[tuple[Timestamp, float]]):
 
         # assert len(symbols_list) > 0, "Symbols list is empty"
         assert date is not None, "Date most be set"
@@ -35,6 +37,8 @@ class gap_reversal_filter_stocks:
         self.last_trading_date = trading_utilities.get_last_trading_date(self.date)
 
         self.chosen_stocks: list[ChosenStock] = []
+
+        self.support_and_resistance_levels = support_and_resistance_levels
 
     def get_chosen_stocks(self):
 
@@ -92,6 +96,23 @@ class gap_reversal_filter_stocks:
             bar_params = get_ib_bars_dto(IbBarTypes.ONE.value, symbol, start_date_time, end_date_time)
             bars = ib_api.get_bars(self.ib_app, bar_params)
             return bars  
+
+    def get_relevant_support_points(self, action: Literal['BUY', 'SELL'], yesterday_close: int, support_and_resistance_levels: list[tuple[Timestamp, float]]) -> tuple[float, float] or None:
+        closest_to_yesterday_close = support_and_resistance.find_closest_support_point(action, yesterday_close, support_and_resistance_levels)
+        if closest_to_yesterday_close == 0:
+            return None
+
+        closest_to_closest = support_and_resistance.find_closest_support_point(action, closest_to_yesterday_close, support_and_resistance_levels)
+        return (closest_to_yesterday_close, closest_to_closest)
+    
+    def today_open_is_geater_than_support(self, action: Literal['BUY', 'SELL'], today_open: float, closest_open: float) -> bool:
+        if action == 'BUY': 
+            if today_open > closest_open:
+                return True
+        elif action == 'SELL':
+            if today_open < closest_open:
+                return True
+        return False
     
     def check_for_chosen_stock(self, symbol: str, last_trading_day_bars: DataFrame, pre_market_to_open_bars: DataFrame) -> ChosenStock or None:
         last_day_volume = last_trading_day_bars["Volume"].values
@@ -115,8 +136,16 @@ class gap_reversal_filter_stocks:
         is_buy_gap = today_open_price >= (yesterday_close_price * 1.03)
         if not is_sell_gap and not is_buy_gap:
             return None
-        
+
         direction = 'SELL' if is_sell_gap else 'BUY' 
+        
+        relevant_support_resistance_points = self.get_relevant_support_points(direction, yesterday_close_price, self.support_and_resistance_levels)
+        if not relevant_support_resistance_points:
+            return None
+
+        if not self.today_open_is_geater_than_support(direction, today_open_price, float(relevant_support_resistance_points[0])):
+            return None
+        
         gap = trading_calculations.gap_percentage(today_open_price, yesterday_close_price, direction)
 
         return ChosenStock(
@@ -127,6 +156,6 @@ class gap_reversal_filter_stocks:
             date=self.date,
             pre_market_volume=pre_market_volume,
             gap=gap,
-            closest_support=0,
-            next_closest_support=0
+            support=float(relevant_support_resistance_points[0] if relevant_support_resistance_points else 0),
+            resistnce=float(relevant_support_resistance_points[1] if relevant_support_resistance_points else 0)
         )
