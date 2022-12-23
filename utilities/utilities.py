@@ -11,8 +11,8 @@ class utilities:
             yield start_date + datetime.timedelta(n)
     
     @staticmethod
-    def calc_minutes_diff(start_orders_at: datetime.datetime, stop_orders_at: datetime.datetime) -> int:
-        c = stop_orders_at - start_orders_at
+    def calc_minutes_diff(start: datetime.datetime, end: datetime.datetime) -> int:
+        c = end - start
         minute_duration = int(c.total_seconds() / 60) + 1
         return minute_duration
     
