@@ -29,6 +29,6 @@ class ChosenStock(BaseModel):
     today_open = DecimalField(decimal_places=2, default=0)
     gap = DecimalField(decimal_places=2)
     pre_market_volume = IntegerField()
-    closest_support = DecimalField(decimal_places=2, default=0.00)
-    next_closest_support = DecimalField(decimal_places=2, default=0.00)
+    support = DecimalField(decimal_places=2, default=0.00)
+    resistance = DecimalField(decimal_places=2, default=0.00)
     date = DateField()
