@@ -1,17 +1,24 @@
 from typing import Literal
 import talib
 from bars_api import get_bars_dto, bars_api
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from enum import Enum
 from ib_insync import IB
 import yfinance
-from pandas import DataFrame
+from pandas import DataFrame, Timestamp
 from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
 from talib_utilities import talib_utilities
 from utilities import utilities
 from ib_api import ib_api
 from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
+from typing import TypedDict
+from support_and_resistance.support_and_resistance import support_and_resistance
+import plotly.graph_objects as go
+
+class SupportAndResistance(TypedDict):
+    interval: str
+    durationInDays: int
 
 class DataProvider(str, Enum):
     IB_API='ib_api',
@@ -34,10 +41,11 @@ class strategy:
         candlestick_patterns: list[str]=[],
         momentum_indicators: list[str]=[],
         volume_indicators: list[str]=[],
+        support_and_resistance_config: SupportAndResistance ={}
     ) -> None:
         
         self.ib_app = None
-        if data_provider == DataProvider.IB_API:
+        if data_provider == DataProvider.IB_API or self.is_support_and_resistance_selected(support_and_resistance_config):
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
             self.ib_app = ib_app
 
@@ -56,17 +64,34 @@ class strategy:
         self.candlestick_patterns = candlestick_patterns
         self.momentum_indicators = momentum_indicators
         self.volume_indicators = volume_indicators
+        self.support_and_resistance = support_and_resistance_config
 
         self.market_data: dict[str, DataFrame] = {}
         self.current_bar_idx: str = None
         self.orders: list[dict] = []
+
+    def is_support_and_resistance_selected(self, support_and_resistance: SupportAndResistance):
+        return "durationInDays" in support_and_resistance and "interval" in support_and_resistance
+    
+    def get_snp_data(self, symbol: str, date: date):
+        end_date_time = datetime.combine(date, self.strategy_start_time)
+        start_date_time = end_date_time - timedelta(days=self.support_and_resistance["durationInDays"])
+        params = get_ib_bars_dto(self.support_and_resistance["interval"], symbol, start_date_time, end_date_time, True)
+        data = ib_api.get_bars(self.ib_app ,params)
+        return data
 
     def start(self):
         for date in utilities.daterange(self.start_date, self.end_date):
             if not trading_utilities.is_trading_day(date):
                 print(f"Market is close on {date}")
                 continue
-            self.before_run_logic(date)
+
+            support_and_resistance_levels = None
+            if self.is_support_and_resistance_selected(self.support_and_resistance):
+                snp_data = self.get_snp_data(symbol, date)
+                support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
+
+            self.before_run_logic(date, support_and_resistance_levels)
             self.market_data = {}
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
@@ -76,15 +101,15 @@ class strategy:
                 talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
                 talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data, self.custom_talib_instance)
                 self.market_data[symbol] = market_data
-                self.run_logic(symbol, market_data)
+                self.run_logic(symbol, market_data, support_and_resistance_levels)
 
         self.after_run_logic(self.orders)
     
-    def before_run_logic(self, date: date):
+    def before_run_logic(self, date: date, support_resistance_levels: list[tuple[Timestamp, float]] or None):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
 
-    def run_logic(self, symbol: str, market_data: DataFrame):
+    def run_logic(self, symbol: str, market_data: DataFrame, support_resistance_levels: list[tuple[Timestamp, float]] or None):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
     
