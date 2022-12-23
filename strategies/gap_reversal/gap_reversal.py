@@ -22,11 +22,11 @@ class gap_reversal(strategy):
     def __init__(self, start_date: date, end_date: date):
 
         self.stocks: dict[str, ChosenStock] = {}
-        self.candlestick_patterns = list(candlestick_pattern_label.keys())
+        self.candlestick_patterns = ["CDLMORNINGDOJISTAR", "CDLMORNINGSTAR", "CDLEVENINGDOJISTAR", "CDLEVENINGSTAR", "CDLENGULFING", "CDL3LINESTRIKE", "CDLGRAVESTONEDOJI"]
         self.risk = 50
 
-        # ib_app = IB()
-        # ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
+        ib_app = IB()
+        ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
 
         strategy.__init__(
             self,
@@ -36,10 +36,14 @@ class gap_reversal(strategy):
             start_time=strategy_start_time,
             end_time=strategy_end_time,
             # data_provider=DataProvider.IB_API,
-            # ib_app=ib_app,
+            ib_app=ib_app,
             custom_talib_instance=extended_talib,
             candlestick_patterns=self.candlestick_patterns,
-            momentum_indicators=["RSI"]
+            momentum_indicators=["RSI"],
+            support_and_resistance_config={
+                "interval": "1 hour",
+                "durationInDays": 30
+            }
         )
         pass
 
@@ -47,7 +51,7 @@ class gap_reversal(strategy):
         super().before_run_logic(date)
         filter_stock_service = gap_reversal_filter_stocks([], date, self.data_provider, self.ib_app)
         filter_stock_service.get_chosen_stocks()
-        for chosen_stock in filter_stock_service.chosen_stocks:
+        for chosen_stock in filter_stock_service.chosen_stocks[:1]:
             self.stocks[chosen_stock.symbol] = chosen_stock
         self.symbols = list(self.stocks.keys())
         # RUN LOGIC TO FIND CHOSENSTOCKS
