@@ -13,7 +13,7 @@ from utilities import utilities
 from ib_api import ib_api
 from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
 from typing import TypedDict
-from support_and_resistance.support_and_resistance import support_and_resistance
+from support_and_resistance import support_and_resistance
 import plotly.graph_objects as go
 from typing import Callable
 
