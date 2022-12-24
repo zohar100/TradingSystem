@@ -24,13 +24,19 @@ class gap_reversal(strategy):
 
         self.stocks: dict[str, ChosenStock] = {}
         self.candlestick_patterns = [
-            "CDLMORNINGDOJISTAR", 
-            "CDLMORNINGSTAR", 
-            "CDLEVENINGDOJISTAR", 
-            "CDLEVENINGSTAR", 
-            "CDLENGULFING",
-            "CDL3LINESTRIKE", 
+            "CDLDRAGONFLYDOJI",
             "CDLGRAVESTONEDOJI"
+            "CDL3LINESTRIKE",
+            "CDLENGULFING",
+            "CDLEVENINGSTAR",
+            "CDLEVENINGDOJISTAR",
+            "CDLMORNINGSTAR",
+            "CDLMORNINGDOJISTAR",
+            "CDLHAMMER",
+            "CDLINVERTEDHAMMER",
+            "CDLSHOOTINGSTAR",
+            "CDLHANGINGMAN",
+            "CDLPIERCING"
         ]
         self.risk = 50
 
