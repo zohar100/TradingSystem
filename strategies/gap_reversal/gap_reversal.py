@@ -1,5 +1,6 @@
 import csv
 from datetime import time, date, datetime
+from typing import Callable
 
 from pandas import DataFrame, Timestamp
 from bars_api import bars_api, get_bars_dto
@@ -47,9 +48,9 @@ class gap_reversal(strategy):
         )
         pass
 
-    def before_run_logic(self, date: date, support_resistance_levels: list[tuple[Timestamp, float]]):
-        super().before_run_logic(date)
-        filter_stock_service = gap_reversal_filter_stocks([], date, self.data_provider, self.ib_app)
+    def before_run_logic(self, date: date, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
+        super().before_run_logic(date, get_snp_levels)
+        filter_stock_service = gap_reversal_filter_stocks(api_symbols_list, date, self.data_provider, self.ib_app, get_snp_levels)
         filter_stock_service.get_chosen_stocks()
         for chosen_stock in filter_stock_service.chosen_stocks[:1]:
             self.stocks[chosen_stock.symbol] = chosen_stock
@@ -58,7 +59,7 @@ class gap_reversal(strategy):
     
     def run_logic(self, symbol: str, market_data: DataFrame):
         super().run_logic(symbol, market_data)
-        stock_direction = self.stocks[symbol].action
+        stock = self.stocks[symbol]
         for datetime ,bar in market_data.iterrows():
             if bar["Volume"] <= 0:
                 self.symbols.remove(symbol)
@@ -67,11 +68,16 @@ class gap_reversal(strategy):
             
             candle_patterns = []
             for pattern in self.candlestick_patterns:
-                is_pattern = bar[pattern] == stock_direction
+                is_pattern = bar[pattern] == stock.action
                 if is_pattern:
                     candle_patterns.append(pattern)
             
             if not len(candle_patterns):
+                continue
+
+            close_precentage = 0.05
+            support_area = stock.support * close_precentage
+            if not bar["Close"] > support_area and not bar["Close"] < support_area:
                 continue
             
             print(f"Found {len(candle_patterns)} orders opportunity at {datetime} for {symbol}")
@@ -86,23 +92,27 @@ class gap_reversal(strategy):
                 if is_evening_star_patterns:
                     stop_loss_high = market_data["High"][:datetime][-2]
 
-                stop_loss = gap_reversal_calculation.stop_loss(stock_direction, stop_loss_high, stop_loss_low)
-                buy_point = gap_reversal_calculation.buy_point(stock_direction, bar["Low"], bar["High"])
-                take_profit = gap_reversal_calculation.take_profit(stock_direction, buy_point, stop_loss)
+                stop_loss = gap_reversal_calculation.stop_loss(stock.action, stop_loss_high, stop_loss_low)
+                buy_point = gap_reversal_calculation.buy_point(stock.action, bar["Low"], bar["High"])
+                take_profit = gap_reversal_calculation.take_profit(stock.action, buy_point, stop_loss)
                 try:
-                    quantity = gap_reversal_calculation.quntity(stock_direction, buy_point, stop_loss, self.risk)
+                    quantity = gap_reversal_calculation.quntity(stock.action, buy_point, stop_loss, self.risk)
                 except Exception:
                     continue
                 extra_fields = { 
                     "pattern": candlestick_pattern_label[candle_pattern],
                     "risk": self.risk,
-                    "cs_volume": self.stocks[symbol].pre_market_volume,
+                    "cs_volume": stock.pre_market_volume,
+                    "support": stock.support,
+                    "resistance": stock.resistance
                 }
-                self.execute_order(symbol, stock_direction, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields, 3)
+                self.execute_order(symbol, stock.action, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields, 3)
         
     
     def after_run_logic(self, orders: list[dict]):
         super().after_run_logic(orders)
+        if len(orders) <= 0:
+            return
         print(f"Saving {len(self.orders)} orders....")
         keys = self.orders[0].keys()
         with open(f'orders-test.csv', 'w', newline='') as output_file:

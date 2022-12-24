@@ -5,8 +5,8 @@ from talib_utilities.talib_value_label_dicts import candlestick_pattern_label
 from strategies import gap_reversal
 from ib_insync import IB
 
-start_date = date(2021, 2, 1)
-end_date = date(2021, 2, 28)
+start_date = date(2021, 12, 1)
+end_date = date(2021, 12, 31)
 
 gap_reversal_test = gap_reversal(start_date, end_date)
 

@@ -15,6 +15,7 @@ from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
 from typing import TypedDict
 from support_and_resistance.support_and_resistance import support_and_resistance
 import plotly.graph_objects as go
+from typing import Callable
 
 class SupportAndResistance(TypedDict):
     interval: str
@@ -79,6 +80,13 @@ class strategy:
         params = get_ib_bars_dto(self.support_and_resistance["interval"], symbol, start_date_time, end_date_time, True)
         data = ib_api.get_bars(self.ib_app ,params)
         return data
+    
+    def get_snp_levels(self, symbol: str, date: date):
+        support_and_resistance_levels = None
+        if self.is_support_and_resistance_selected(self.support_and_resistance):
+            snp_data = self.get_snp_data(symbol, date)
+            support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
+        return support_and_resistance_levels
 
     def start(self):
         for date in utilities.daterange(self.start_date, self.end_date):
@@ -86,12 +94,7 @@ class strategy:
                 print(f"Market is close on {date}")
                 continue
 
-            support_and_resistance_levels = None
-            if self.is_support_and_resistance_selected(self.support_and_resistance):
-                snp_data = self.get_snp_data(symbol, date)
-                support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
-
-            self.before_run_logic(date, support_and_resistance_levels)
+            self.before_run_logic(date, self.get_snp_levels)
             self.market_data = {}
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
@@ -101,15 +104,15 @@ class strategy:
                 talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
                 talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data, self.custom_talib_instance)
                 self.market_data[symbol] = market_data
-                self.run_logic(symbol, market_data, support_and_resistance_levels)
+                self.run_logic(symbol, market_data)
 
         self.after_run_logic(self.orders)
     
-    def before_run_logic(self, date: date, support_resistance_levels: list[tuple[Timestamp, float]] or None):
+    def before_run_logic(self, date: date, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
 
-    def run_logic(self, symbol: str, market_data: DataFrame, support_resistance_levels: list[tuple[Timestamp, float]] or None):
+    def run_logic(self, symbol: str, market_data: DataFrame):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
     

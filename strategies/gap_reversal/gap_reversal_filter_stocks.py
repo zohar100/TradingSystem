@@ -1,7 +1,7 @@
 
 
 
-from typing import Literal
+from typing import Callable, Literal
 from ib_insync import IB
 from pandas import DataFrame, Timestamp
 from strategy import DataProvider
@@ -15,7 +15,7 @@ from .gap_reversal_models import db
 from trading_calculations import trading_calculations
 
 class gap_reversal_filter_stocks:
-    def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, support_and_resistance_levels: list[tuple[Timestamp, float]]):
+    def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
 
         # assert len(symbols_list) > 0, "Symbols list is empty"
         assert date is not None, "Date most be set"
@@ -38,7 +38,7 @@ class gap_reversal_filter_stocks:
 
         self.chosen_stocks: list[ChosenStock] = []
 
-        self.support_and_resistance_levels = support_and_resistance_levels
+        self.get_snp_levels = get_snp_levels
 
     def get_chosen_stocks(self):
 
@@ -98,12 +98,12 @@ class gap_reversal_filter_stocks:
             return bars  
 
     def get_relevant_support_points(self, action: Literal['BUY', 'SELL'], yesterday_close: int, support_and_resistance_levels: list[tuple[Timestamp, float]]) -> tuple[float, float] or None:
-        closest_to_yesterday_close = support_and_resistance.find_closest_support_point(action, yesterday_close, support_and_resistance_levels)
-        if closest_to_yesterday_close == 0:
+        support = support_and_resistance.find_closest_support_point(action, yesterday_close, support_and_resistance_levels)
+        if support == 0:
             return None
 
-        closest_to_closest = support_and_resistance.find_closest_support_point(action, closest_to_yesterday_close, support_and_resistance_levels)
-        return (closest_to_yesterday_close, closest_to_closest)
+        resistance = support_and_resistance.find_closest_support_point(action, support, support_and_resistance_levels)
+        return (support, resistance)
     
     def today_open_is_geater_than_support(self, action: Literal['BUY', 'SELL'], today_open: float, closest_open: float) -> bool:
         if action == 'BUY': 
@@ -139,7 +139,8 @@ class gap_reversal_filter_stocks:
 
         direction = 'SELL' if is_sell_gap else 'BUY' 
         
-        relevant_support_resistance_points = self.get_relevant_support_points(direction, yesterday_close_price, self.support_and_resistance_levels)
+        support_and_resistance_levels = self.get_snp_levels(symbol, self.date)
+        relevant_support_resistance_points = self.get_relevant_support_points(direction, yesterday_close_price, support_and_resistance_levels)
         if not relevant_support_resistance_points:
             return None
 
