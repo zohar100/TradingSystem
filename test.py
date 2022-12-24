@@ -37,32 +37,15 @@ gap_reversal_test.start()
 
 # symbols = ["AAPL", "TSLA", "MSFT", "GOOG", "NVDA", "AMD", "META", "KO", "BABA", "DIS", "PDD", "FUTU", "BILI", "CRM", "NIO", "SEDG", "SHOP", "DE"]
 
-# snp_data = get_snp_data("AAPL", date.today())
+# symbol = "NTNX"
+# snp_data = get_snp_data(symbol, date.today())
 # support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
-# fig = go.Figure(data=[
-#     go.Scatter(
-#         x=[list(snp)[0] for snp in support_and_resistance_levels],
-#         y= [list(snp)[1] for snp in support_and_resistance_levels],
-#         mode="markers",
-#         yaxis="y2",
-#         marker=dict(
-#             size=16,
-#         ),
-#         name="Support And Resistance"
-#     ),
-#     go.Candlestick(
-#         x=snp_data.index,
-#         open=snp_data["Open"],
-#         high=snp_data["High"],
-#         low=snp_data["Low"],
-#         close=snp_data["Close"],
-#         yaxis="y2",
-#         name="Candlestick"
-#     ),
-# ])
-# # fig.update_xaxes(title_text='Date')
-# # fig.update_yaxes(title_text='Prices')
-# fig.update_layout(xaxis_rangeslider_visible=True, 
-#     title = f'{"AAPL"} Spot Rate'
-# ) # Set Set Range Slider Bar and Title
-# fig.show()
+
+# today_open = snp_data["Open"].values[-1]
+# print(f"Today open {today_open}")
+# support = support_and_resistance.find_closest_support_point('BUY', today_open, support_and_resistance_levels)
+# print(f"support: {support}")
+# resistance = support_and_resistance.find_closest_support_point('SELL', support, support_and_resistance_levels)
+# print(f"resistance: {resistance}")
+
+# support_and_resistance.plot_support_and_resistance_results(support_and_resistance_levels, snp_data, symbol)

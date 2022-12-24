@@ -3,6 +3,7 @@
 from typing import Literal
 import numpy as np
 from pandas import DataFrame, Timestamp
+import plotly.graph_objects as go
 
 class support_and_resistance:
     @staticmethod
@@ -34,15 +35,43 @@ class support_and_resistance:
         return levels
     
     @staticmethod
-    def find_closest_support_point(action: Literal['BUY', 'SELL'], close_to_number: int, support_and_resistance_levels: list[tuple[Timestamp, float]]):
+    def find_closest_support_point(action: Literal['BUY', 'SELL'], today_open: int, support_and_resistance_levels: list[tuple[Timestamp, float]]):
         levels_numbers = [s[1] for s in support_and_resistance_levels]
         closest = 0.0
         if action == 'BUY':
             for number in levels_numbers:
-                if number > close_to_number and (closest == 0 or number < closest):
+                if number < today_open and (closest == 0 or number > closest):
                     closest = number
         elif action == 'SELL':
             for number in levels_numbers:
-                if number < close_to_number and (closest == 0 or number > closest):
+                if number > today_open and (closest == 0 or number < closest):
                     closest = number
         return closest
+    
+    @staticmethod
+    def plot_support_and_resistance_results(support_and_resistance_levels: list[tuple[Timestamp, float]], market_data: DataFrame, symbol: str):
+        fig = go.Figure(data=[
+        go.Scatter(
+            x=[list(snp)[0] for snp in support_and_resistance_levels],
+            y= [list(snp)[1] for snp in support_and_resistance_levels],
+            mode="markers",
+            yaxis="y2",
+            marker=dict(
+                size=16,
+            ),
+            name="Support And Resistance" ),
+        go.Candlestick(
+            x=market_data.index,
+            open=market_data["Open"],
+            high=market_data["High"],
+            low=market_data["Low"],
+            close=market_data["Close"],
+            yaxis="y2",
+            name="Candlestick"),
+        ])
+        fig.update_xaxes(title_text='Date')
+        fig.update_yaxes(title_text='Prices')
+        fig.update_layout(xaxis_rangeslider_visible=True, 
+            title = f'{symbol} Spot Rate'
+        ) # Set Set Range Slider Bar and Title
+        fig.show()

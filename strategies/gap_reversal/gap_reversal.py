@@ -23,7 +23,15 @@ class gap_reversal(strategy):
     def __init__(self, start_date: date, end_date: date):
 
         self.stocks: dict[str, ChosenStock] = {}
-        self.candlestick_patterns = ["CDLMORNINGDOJISTAR", "CDLMORNINGSTAR", "CDLEVENINGDOJISTAR", "CDLEVENINGSTAR", "CDLENGULFING", "CDL3LINESTRIKE", "CDLGRAVESTONEDOJI"]
+        self.candlestick_patterns = [
+            "CDLMORNINGDOJISTAR", 
+            "CDLMORNINGSTAR", 
+            "CDLEVENINGDOJISTAR", 
+            "CDLEVENINGSTAR", 
+            "CDLENGULFING",
+            "CDL3LINESTRIKE", 
+            "CDLGRAVESTONEDOJI"
+        ]
         self.risk = 50
 
         ib_app = IB()
@@ -75,11 +83,17 @@ class gap_reversal(strategy):
             if not len(candle_patterns):
                 continue
 
-            close_precentage = 0.05
+            close_precentage = 0.005
             support_area = stock.support * close_precentage
-            if not bar["Close"] > support_area and not bar["Close"] < support_area:
+            top_border = stock.support + support_area
+            bottom_border = stock.support - support_area
+            if bar["Close"] <= top_border and bar["Close"] >= stock.support:
+                order_area = "TOP"
+            elif bar["Close"] >= bottom_border and bar["Close"] <= stock.support:
+                order_area = "BOTTOM"
+            else: 
                 continue
-            
+
             print(f"Found {len(candle_patterns)} orders opportunity at {datetime} for {symbol}")
             for candle_pattern in candle_patterns:
 
@@ -104,7 +118,8 @@ class gap_reversal(strategy):
                     "risk": self.risk,
                     "cs_volume": stock.pre_market_volume,
                     "support": stock.support,
-                    "resistance": stock.resistance
+                    "resistance": stock.resistance,
+                    "order_area": order_area
                 }
                 self.execute_order(symbol, stock.action, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields, 3)
         

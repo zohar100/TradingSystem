@@ -102,7 +102,8 @@ class gap_reversal_filter_stocks:
         if support == 0:
             return None
 
-        resistance = support_and_resistance.find_closest_support_point(action, support, support_and_resistance_levels)
+        resistance_action = 'BUY' if action == 'SELL' else 'SELL'
+        resistance = support_and_resistance.find_closest_support_point(resistance_action, support, support_and_resistance_levels)
         return (support, resistance)
     
     def today_open_is_geater_than_support(self, action: Literal['BUY', 'SELL'], today_open: float, closest_open: float) -> bool:
