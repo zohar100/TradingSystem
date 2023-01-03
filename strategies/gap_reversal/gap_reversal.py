@@ -25,7 +25,7 @@ class gap_reversal(strategy):
         self.stocks: dict[str, ChosenStock] = {}
         self.candlestick_patterns = [
             "CDLDRAGONFLYDOJI",
-            "CDLGRAVESTONEDOJI"
+            "CDLGRAVESTONEDOJI",
             "CDL3LINESTRIKE",
             "CDLENGULFING",
             "CDLEVENINGSTAR",
@@ -64,9 +64,10 @@ class gap_reversal(strategy):
 
     def before_run_logic(self, date: date, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
         super().before_run_logic(date, get_snp_levels)
+        self.stocks = {}
         filter_stock_service = gap_reversal_filter_stocks(api_symbols_list, date, self.data_provider, self.ib_app, get_snp_levels)
         filter_stock_service.get_chosen_stocks()
-        for chosen_stock in filter_stock_service.chosen_stocks[:1]:
+        for chosen_stock in filter_stock_service.chosen_stocks:
             self.stocks[chosen_stock.symbol] = chosen_stock
         self.symbols = list(self.stocks.keys())
         # RUN LOGIC TO FIND CHOSENSTOCKS
@@ -89,16 +90,23 @@ class gap_reversal(strategy):
             if not len(candle_patterns):
                 continue
 
-            close_precentage = 0.005
-            support_area = stock.support * close_precentage
-            top_border = stock.support + support_area
-            bottom_border = stock.support - support_area
-            if bar["Close"] <= top_border and bar["Close"] >= stock.support:
+            if  bar["Low"] >= float(stock.support):
                 order_area = "TOP"
-            elif bar["Close"] >= bottom_border and bar["Close"] <= stock.support:
+                support_distance = bar["Low"] - stock.support
+            elif bar["High"] <= float(stock.support):
                 order_area = "BOTTOM"
-            else: 
-                continue
+                support_distance = stock.support - bar["High"]
+
+            support_percentage = (support_distance / float(stock.support)) * 100
+
+            # if  bar["Low"] <= float(stock.resistance):
+            #     order_area = "TOP"
+            #     resistance_distance = bar["Low"] - stock.resistance
+            # elif bar["High"] >= float(stock.resistance):
+            #     order_area = "BOTTOM"
+            #     resistance_distance = stock.resistance - bar["High"]
+
+            # resistance_percentage = (resistance_distance / float(stock.resistance)) * 100
 
             print(f"Found {len(candle_patterns)} orders opportunity at {datetime} for {symbol}")
             for candle_pattern in candle_patterns:
@@ -125,7 +133,9 @@ class gap_reversal(strategy):
                     "cs_volume": stock.pre_market_volume,
                     "support": stock.support,
                     "resistance": stock.resistance,
-                    "order_area": order_area
+                    "order_area": order_area,
+                    "support_distance": support_distance,
+                    "support_percentage": support_percentage
                 }
                 self.execute_order(symbol, stock.action, buy_point, take_profit, quantity, datetime, stop_loss, extra_fields, 3)
         
@@ -140,6 +150,5 @@ class gap_reversal(strategy):
             dict_writer = csv.DictWriter(output_file, keys)
             dict_writer.writeheader()
             dict_writer.writerows(self.orders)
-        self.orders = []
         print("Orders saved")
 

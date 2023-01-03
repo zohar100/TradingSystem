@@ -53,11 +53,11 @@ class gap_reversal_filter_stocks:
         print("Chosen stocks not found in the DB")
         for symbol in self.symbols_list:
             print(f"Getting bars for {symbol}")
-            try:
-                last_trading_day_bars = self.get_all_last_trading_day_bars(symbol)
-                bars_from_market_open_time = self.get_bars_from_market_open_time(symbol)
-            except Exception as e:
-                continue
+            # try:
+            last_trading_day_bars = self.get_all_last_trading_day_bars(symbol)
+            bars_from_market_open_time = self.get_bars_from_market_open_time(symbol)
+            # except Exception as e:
+            #     continue
 
             if len(last_trading_day_bars) <= 0 or len(bars_from_market_open_time) <= 0:
                 print(f"Error getting bars for {symbol}: Bars not available")
@@ -132,7 +132,7 @@ class gap_reversal_filter_stocks:
             return None
         
         yesterday_close_price = last_trading_day_bars["Close"].values[-1]
-        today_open_price = pre_market_to_open_bars["Open"].values[-1]
+        today_open_price = pre_market_to_open_bars["Open"].values[-3]
         is_sell_gap = today_open_price <= (yesterday_close_price * 0.97)
         is_buy_gap = today_open_price >= (yesterday_close_price * 1.03)
         if not is_sell_gap and not is_buy_gap:
@@ -141,7 +141,7 @@ class gap_reversal_filter_stocks:
         direction = 'SELL' if is_sell_gap else 'BUY' 
         
         support_and_resistance_levels = self.get_snp_levels(symbol, self.date)
-        relevant_support_resistance_points = self.get_relevant_support_points(direction, yesterday_close_price, support_and_resistance_levels)
+        relevant_support_resistance_points = self.get_relevant_support_points(direction, today_open_price, support_and_resistance_levels)
         if not relevant_support_resistance_points:
             return None
 
@@ -158,6 +158,6 @@ class gap_reversal_filter_stocks:
             date=self.date,
             pre_market_volume=pre_market_volume,
             gap=gap,
-            support=float(relevant_support_resistance_points[0] if relevant_support_resistance_points else 0),
-            resistnce=float(relevant_support_resistance_points[1] if relevant_support_resistance_points else 0)
+            support=float(relevant_support_resistance_points[0]),
+            resistance=float(relevant_support_resistance_points[1])
         )

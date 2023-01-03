@@ -12,6 +12,23 @@ gap_reversal_test = gap_reversal(start_date, end_date)
 
 gap_reversal_test.start()
 
+# from ib_api import ib_api, get_bars_dto
+# from ib_insync import IB
+# from talib_utilities import talib_utilities
+
+# app = IB()
+# app.connect(host='127.0.0.1', port=7497, clientId=1)
+
+# start_date = datetime(2023, 1, 2, 9, 31)
+# end_date = datetime(2023, 1, 2, 16)
+# params = get_bars_dto('1 min', 'AAPL', start_date, end_date, True)
+# data = ib_api.get_bars(app, params)
+
+# talib_utilities.add_momentum_idicators_to_dataframe(['RSI'], data)
+# talib_utilities.add_volume_idicators_to_dataframe(['VWAP'], data)
+# data.to_csv(f'AAPL-INDICATORS.csv', encoding='utf-8')
+
+
 
 # import plotly.graph_objects as go
 # from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
