@@ -1,6 +1,7 @@
 from typing import Literal
 import talib
 from bars_api import get_bars_dto, bars_api
+from polygon_api import polygon_api, get_bars_dto as get_polygon_bars_dto
 from datetime import datetime, date, time, timedelta
 from enum import Enum
 from ib_insync import IB
@@ -25,6 +26,7 @@ class DataProvider(str, Enum):
     IB_API='ib_api',
     YF_API='yf_api',
     BARS_API='bars_api'
+    POLY_API = 'poly_api'
 
 class strategy:
 
@@ -193,5 +195,13 @@ class strategy:
         params = get_bars_dto("1", [symbol], start_date_time, end_date_time)
         data = bars_api.get_bars(params)
         return data
+    
+
+    @staticmethod
+    def __get_data_poly_api(start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
+        params = get_polygon_bars_dto("1 minute", symbol, start_date_time, end_date_time)
+        data = polygon_api.get_bars(params)
+        return data
+
     
     
