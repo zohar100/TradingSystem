@@ -1,7 +1,7 @@
 from __future__ import annotations
 from decouple import config
-from polygon_api.dto.get_bars_dto import get_bars_dto
-from polygon_api.polygon_api_utilities import polygon_api_utilities
+from .dto.get_bars_dto import get_bars_dto
+from .polygon_api_utilities import polygon_api_utilities
 from trading_utilities import new_york_timezone
 from polygon import RESTClient
 

@@ -14,7 +14,7 @@ class polygon_api_utilities:
     def format_bars_resonse(response: list) -> DataFrame:
         dict_list = [bar.__dict__ for bar in response]
         for bar in dict_list:
-            bar["timestamp"] = datetime.utcfromtimestamp(bar["timestamp"] / 1000).replace(tzinfo=utc).astimezone(new_york_timezone)
+            bar["timestamp"] = datetime.utcfromtimestamp(bar["timestamp"] / 1000).replace(tzinfo=utc).astimezone(new_york_timezone).replace(tzinfo=None)
             bar["volume"] = bar["volume"] * 100
         df = pd.DataFrame.from_dict(dict_list)
         if not len(df.columns):

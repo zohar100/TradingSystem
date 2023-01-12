@@ -1,8 +1,8 @@
 from __future__ import annotations
 from decouple import config
-from bars_api.bars_api_utilities import bars_api_utilities
+from .bars_api_utilities import bars_api_utilities
 
-from bars_api.dto.get_bars_dto import get_bars_dto
+from .dto.get_bars_dto import get_bars_dto
 
 import requests
 

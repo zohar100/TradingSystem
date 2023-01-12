@@ -3,11 +3,11 @@ from datetime import time, date, datetime
 from typing import Callable
 
 from pandas import DataFrame, Timestamp
-from bars_api import bars_api, get_bars_dto
+
 from trading_utilities import market_start_time
 from strategy import strategy, DataProvider
 from talib_utilities import candlestick_pattern_label
-from bars_api.bars_api_utilities import api_symbols_list
+from apis.bars_api.bars_api_utilities import api_symbols_list
 
 from .gap_reversal_filter_stocks import gap_reversal_filter_stocks
 from .gap_reversal_models import ChosenStock

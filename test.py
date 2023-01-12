@@ -1,7 +1,7 @@
 from pandas import DataFrame
 import pandas as pd
 import pytz
-from strategy import strategy, DataProvider
+from strategy import strategy
 from datetime import datetime, date, time, timedelta
 from support_and_resistance import support_and_resistance
 from talib_utilities.talib_value_label_dicts import candlestick_pattern_label
@@ -108,11 +108,15 @@ from talib_utilities import talib_utilities
 
 # fig.show()
 
-from polygon_api import polygon_api, get_bars_dto
+from apis import api, get_bars_dto, DataProvider, BarTypes
 
 
-_from = datetime(2023, 1, 5, 9, 30)
-_to = datetime(2023, 1, 5, 16)
+_from = datetime(2022, 12, 27, 9, 30)
+_to = datetime(2022, 12, 27, 16)
 
-params = get_bars_dto('1 minute', 'AAPL', _from, _to)
-print(polygon_api.get_bars(params))
+params = get_bars_dto(DataProvider.ib_api, BarTypes.five_minutes, 'AAPL', _from, _to)
+data = api.get_bars(params)
+talib_utilities.add_momentum_idicators_to_dataframe(["RSI"], data)
+talib_utilities.add_volume_idicators_to_dataframe(["VWAP"], data)
+
+print(data)

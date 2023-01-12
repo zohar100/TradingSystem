@@ -9,8 +9,8 @@ from datetime import date, datetime
 from support_and_resistance.support_and_resistance import support_and_resistance
 from trading_utilities import trading_utilities, pre_market_start_time, market_end_time, market_start_time
 from .gap_reversal_models import ChosenStock
-from ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
-from bars_api import bars_api, BarType as HttpBarTypes, get_bars_dto as get_http_bars_dto
+from apis.ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
+from apis.bars_api import bars_api, BarType as HttpBarTypes, get_bars_dto as get_http_bars_dto
 from .gap_reversal_models import db
 from trading_calculations import trading_calculations
 

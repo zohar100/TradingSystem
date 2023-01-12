@@ -1,7 +1,7 @@
 from typing import Literal
 import talib
-from bars_api import get_bars_dto, bars_api
-from polygon_api import polygon_api, get_bars_dto as get_polygon_bars_dto
+from apis.bars_api import get_bars_dto, bars_api
+from apis.polygon_api import polygon_api, get_bars_dto as get_polygon_bars_dto
 from datetime import datetime, date, time, timedelta
 from enum import Enum
 from ib_insync import IB
@@ -11,8 +11,8 @@ from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
 from talib_utilities import talib_utilities
 from utilities import utilities
-from ib_api import ib_api
-from ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
+from apis.ib_api import ib_api
+from apis.ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
 from typing import TypedDict
 from support_and_resistance import support_and_resistance
 import plotly.graph_objects as go
