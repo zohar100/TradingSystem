@@ -110,11 +110,13 @@ from talib_utilities import talib_utilities
 
 from apis import api, get_bars_dto, DataProvider, BarTypes
 
+# ib_app = IB()
+# ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
 
 _from = datetime(2022, 12, 27, 9, 30)
 _to = datetime(2022, 12, 27, 16)
 
-params = get_bars_dto(DataProvider.ib_api, BarTypes.five_minutes, 'AAPL', _from, _to)
+params = get_bars_dto(DataProvider.yf_api, BarTypes.five_minutes, 'AAPL', _from, _to)
 data = api.get_bars(params)
 talib_utilities.add_momentum_idicators_to_dataframe(["RSI"], data)
 talib_utilities.add_volume_idicators_to_dataframe(["VWAP"], data)

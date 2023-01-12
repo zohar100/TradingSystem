@@ -79,6 +79,7 @@ class api:
     @staticmethod
     def _get_data_yf_api(type: str, start_date_time: datetime, end_date_time: datetime, symbol: str):
         data: DataFrame = yfinance.download(symbol, start=start_date_time, end=end_date_time, threads= False, interval=type)
+        data.index = [i.replace(tzinfo=None) for i in data.index]
         data.rename(columns={
             'Datetime': 'Date',
         }, inplace=True)
