@@ -1,11 +1,9 @@
 from typing import Literal
 import talib
-from apis.bars_api import get_bars_dto, bars_api
-from apis.polygon_api import polygon_api, get_bars_dto as get_polygon_bars_dto
 from datetime import datetime, date, time, timedelta
+from apis import api, get_bars_dto, DataProvider
 from enum import Enum
 from ib_insync import IB
-import yfinance
 from pandas import DataFrame, Timestamp
 from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
@@ -22,12 +20,6 @@ class SupportAndResistance(TypedDict):
     interval: str
     durationInDays: int
 
-class DataProvider(str, Enum):
-    IB_API='ib_api',
-    YF_API='yf_api',
-    BARS_API='bars_api'
-    POLY_API = 'poly_api'
-
 class strategy:
 
     def __init__(
@@ -37,7 +29,7 @@ class strategy:
         start_time: time,
         end_time: time,
         symbols: list[str],
-        data_provider: DataProvider=DataProvider.BARS_API, 
+        data_provider: DataProvider=DataProvider.bars_api, 
         ib_app: IB=None, 
         commition: float = 1.8,
         custom_talib_instance=talib,
@@ -48,7 +40,7 @@ class strategy:
     ) -> None:
         
         self.ib_app = None
-        if data_provider == DataProvider.IB_API or self.is_support_and_resistance_selected(support_and_resistance_config):
+        if data_provider == DataProvider.ib_api or self.is_support_and_resistance_selected(support_and_resistance_config):
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
             self.ib_app = ib_app
 
@@ -76,6 +68,7 @@ class strategy:
     def is_support_and_resistance_selected(self, support_and_resistance: SupportAndResistance):
         return "durationInDays" in support_and_resistance and "interval" in support_and_resistance
     
+    #TODO - use api class instead of ib
     def get_snp_data(self, symbol: str, date: date):
         end_date_time = datetime.combine(date, self.strategy_start_time)
         start_date_time = end_date_time - timedelta(days=self.support_and_resistance["durationInDays"])
@@ -174,34 +167,8 @@ class strategy:
         self.orders.append(order)
     
     def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        return getattr(self, f'_strategy__get_data_{self.data_provider}')(start_date_time, end_date_time, symbol)
-
-    def __get_data_ib_api(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_ib_bars_dto("1 min", symbol, start_date_time, end_date_time)
-        data = ib_api.get_bars(self.ib_app ,params)
-        return data
-
-    @staticmethod
-    def __get_data_yf_api(start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        data = yfinance.download(symbol, start=start_date_time, end=end_date_time, threads= False, interval="1m")
-        data.rename(columns={
-            'Datetime': 'Date',
-        }, inplace=True)
-        data.drop(['Adj Close'], axis=1, inplace=True)
-        return data
-
-    @staticmethod
-    def __get_data_bars_api(start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_bars_dto("1", [symbol], start_date_time, end_date_time)
-        data = bars_api.get_bars(params)
-        return data
-    
-
-    @staticmethod
-    def __get_data_poly_api(start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_polygon_bars_dto("1 minute", symbol, start_date_time, end_date_time)
-        data = polygon_api.get_bars(params)
-        return data
+        params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
+        return api.get_bars()
 
     
     
