@@ -3,8 +3,7 @@
 from pandas import DataFrame
 import talib
 import pandas_ta 
-from .talib_value_label_dicts import candlestick_pattern_label
-
+from .talib_consts import candlestick_pattern_label
 
 class talib_utilities:
     @staticmethod

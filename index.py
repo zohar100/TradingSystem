@@ -2,15 +2,12 @@ import csv
 from datetime import *
 import talib
 from talib_utilities import talib_utilities
-import yfinance
 import pandas as pd
 from utilities import utilities
 from trading_utilities import trading_utilities, new_york_timezone, market_end_time, market_start_time, pre_market_start_time
 from trading_calculations import trading_calculations
 from candlestick_patterns import candlestick_patterns
 from ib_insync import *
-import pytz
-
 
 
 def check_direction(yesterday_close: float, today_open: float, plus: float):

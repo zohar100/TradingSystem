@@ -1,12 +1,12 @@
 import csv
-from datetime import time, date, datetime
+from datetime import time, date
 from typing import Callable
 
 from pandas import DataFrame, Timestamp
 
 from trading_utilities import market_start_time
-from strategy import strategy, DataProvider
-from talib_utilities import candlestick_pattern_label
+from strategy import strategy
+from talib_utilities import talib_utilities
 from apis.bars_api.bars_api_utilities import api_symbols_list
 
 from .gap_reversal_filter_stocks import gap_reversal_filter_stocks
@@ -14,7 +14,6 @@ from .gap_reversal_models import ChosenStock
 from .gap_reversal_calculation import gap_reversal_calculation
 from .extended_talib import talib as extended_talib
 from ib_insync import IB
-import pandas as pd
 
 strategy_start_time = market_start_time
 strategy_end_time = time(15, 50)
@@ -128,7 +127,7 @@ class gap_reversal(strategy):
                 except Exception:
                     continue
                 extra_fields = { 
-                    "pattern": candlestick_pattern_label[candle_pattern],
+                    "pattern": talib_utilities.get_candlestick_pattern_label(candle_pattern),
                     "risk": self.risk,
                     "cs_volume": stock.pre_market_volume,
                     "support": stock.support,

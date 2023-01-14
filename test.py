@@ -4,7 +4,6 @@ import pytz
 from strategy import strategy
 from datetime import datetime, date, time, timedelta
 from support_and_resistance import support_and_resistance
-from talib_utilities.talib_value_label_dicts import candlestick_pattern_label
 from strategies import gap_reversal
 from ib_insync import IB
 from trading_utilities import new_york_timezone

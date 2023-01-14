@@ -12,7 +12,10 @@ from .bars_api import get_bars_dto as bars_get_bars_dto, bars_api
 
 class BarTypes(str, Enum):
     one_minute = '1m'
+    tow_minutes = '2m'
     five_minutes = '5m'
+    one_hour = '1h'
+    one_day = '1d'
 
 class DataProvider(str, Enum):
     ib_api='ib_api',
@@ -23,19 +26,27 @@ class DataProvider(str, Enum):
 provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = { 
     DataProvider.ib_api: {
         BarTypes.one_minute: '1 min',
-        BarTypes.five_minutes: '5 mins'
+        BarTypes.tow_minutes: '2 mins',
+        BarTypes.five_minutes: '5 mins',
+        BarTypes.one_hour: '1 hour',
+        BarTypes.one_day: '1 day'
     },
     DataProvider.yf_api: {
         BarTypes.one_minute: '1m',
-        BarTypes.five_minutes: '5m'
+        BarTypes.tow_minutes: '2m',
+        BarTypes.five_minutes: '5m',
+        BarTypes.one_hour: '1h',
+        BarTypes.one_day: '1d'
     },
     DataProvider.bars_api: {
         BarTypes.one_minute: '1',
-        BarTypes.five_minutes: '5'
     },
     DataProvider.poly_api: {
         BarTypes.one_minute: '1 minute',
-        BarTypes.five_minutes: '5 minute'
+        BarTypes.tow_minutes: '2 minute',
+        BarTypes.five_minutes: '5 minute',
+        BarTypes.one_hour: '1 hour',
+        BarTypes.one_day: '1 day'
     }
 }
 
@@ -44,9 +55,12 @@ class get_bars_dto:
     def __init__(self, provider: DataProvider, type: BarTypes, symbol: str, start_date: datetime, end_date: datetime, ib_app: IB = None):
         if provider == DataProvider.ib_api:
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
+        
+        bars_type = provider_bar_type_map[provider]
+        assert type in bars_type, f"The selected interval not supported in the {provider} provider"
 
         self.provider = provider
-        self.type = provider_bar_type_map[provider][type]
+        self.type = bars_type[type]
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date

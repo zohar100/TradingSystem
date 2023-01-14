@@ -107,3 +107,28 @@ volatility_indicator_label = {
     'NATR': "Normalized Average True Range", 
     'TRANGE': "True Range"
 }
+
+candlestick_patterns = candlestick_pattern_label.keys()
+momentum_indicators = momentum_indicator_label.keys()
+volume_indicators = volume_indicator_label.keys()
+volatility_indicators = volatility_indicator_label.keys()
+
+# The following patterns has been validated
+suggested_candlestick_patterns = [
+    "CDLDRAGONFLYDOJI",
+    "CDLGRAVESTONEDOJI",
+    "CDL3LINESTRIKE",
+    "CDLENGULFING",
+    "CDLEVENINGSTAR",
+    "CDLEVENINGDOJISTAR",
+    "CDLMORNINGSTAR",
+    "CDLMORNINGDOJISTAR",
+    "CDLHAMMER",
+    "CDLINVERTEDHAMMER",
+    "CDLSHOOTINGSTAR",
+    "CDLHANGINGMAN",
+    "CDLPIERCING"
+]
+
+suggested_momentum_indicators = ["RSI"]
+suggested_volume_indicators = ["VWAP"]
