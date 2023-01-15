@@ -27,7 +27,7 @@ def plot_candlesticks(market_data: DataFrame, symbol: str, selected_patterns: li
     fig = make_subplots(rows=3, cols=1,
                         shared_xaxes=True,
                         vertical_spacing=0.03,
-                        row_width=[0.3, 0.2, 0.7]
+                        row_width=[0.3, 0.3, 0.7]
                     )
 
     fig.add_trace(go.Candlestick(x=market_data.index,
@@ -36,10 +36,19 @@ def plot_candlesticks(market_data: DataFrame, symbol: str, selected_patterns: li
                                 low=market_data['Low'],
                                 close=market_data['Close'],
                             ), row=1, col=1)
-
+    
+    colors = []
+    for i in range(len(market_data['Close'])):
+        if i != 0:
+            if market_data['Close'][i] > market_data['Close'][i-1]:
+                colors.append('green')
+            else:
+                colors.append('red')
+        else:
+            colors.append('red')
     fig.add_trace(go.Bar(x=market_data.index, 
                         y=market_data['Volume'],
-                        name='Volume'), row=2, col=1)
+                        name='Volume', marker=dict( color=colors )), row=2, col=1)
     
     if len(selected_patterns) > 0:
         for pattern in selected_patterns:
@@ -91,22 +100,27 @@ class Viewer(tkinter.Frame):
         self.symbol_input.insert(0, 'AAPL')
         self.symbol_input.grid(row = 1, column = 0, sticky="W")
 
-        self.date_label = tkinter.Label(text="Enter date")
-        self.date_label.grid(row =2, column = 0, pady=20, sticky="W")
-        self.date_picker = tkcalendar.DateEntry(master, selectmode = "day",year=2022,month=9,date=27, foreground='black')
-        self.date_picker.grid(row =3, column = 0, sticky="W")
+        self.start_date_label = tkinter.Label(text="Enter start date")
+        self.start_date_label.grid(row =2, column = 0, pady=20, sticky="W")
+        self.start_date_picker = tkcalendar.DateEntry(master, selectmode = "day",year=2022,month=9,date=27, foreground='black')
+        self.start_date_picker.grid(row =3, column = 0, sticky="W")
 
         self.start_time_label = tkinter.Label(text="Enter start time (hh:mm)")
-        self.start_time_label.grid(row =2, column = 1, pady=20, sticky="W", padx=10)
+        self.start_time_label.grid(row =2, column = 1, pady=20, sticky="W")
         self.start_time_input = tkinter.Entry()
         self.start_time_input.insert(0, "09:30")
-        self.start_time_input.grid(row=3, column=1, sticky="W", padx=10)
+        self.start_time_input.grid(row=3, column=1, sticky="W")
 
-        self.end_time_label = tkinter.Label(text="Enter start time (hh:mm)")
-        self.end_time_label.grid(row =2, column = 2, pady=20, sticky="W", padx=10)
+        self.end_date_label = tkinter.Label(text="Enter end date")
+        self.end_date_label.grid(row =2, column = 2, pady=20, sticky="W")
+        self.end_date_picker = tkcalendar.DateEntry(master, selectmode = "day",year=2022,month=9,date=27, foreground='black')
+        self.end_date_picker.grid(row =3, column = 2, sticky="W", padx=20)
+
+        self.end_time_label = tkinter.Label(text="Enter end time (hh:mm)")
+        self.end_time_label.grid(row =2, column = 3, pady=20, sticky="W")
         self.end_time_input = tkinter.Entry()
         self.end_time_input.insert(0, "16:00")
-        self.end_time_input.grid(row=3, column=2, sticky="W", padx=10)
+        self.end_time_input.grid(row=3, column=3, sticky="W")
 
         self.interval_label = tkinter.Label(text="Enter interval (1m, 2m, 5m, 1h, 1d)")
         self.interval_label.grid(row=4, column=0, sticky="W", pady=20,)
@@ -155,11 +169,12 @@ class Viewer(tkinter.Frame):
 
     def on_submit_clicked(self):
         symbol = self.symbol_input.get()
-        date = self.date_picker.get_date()
+        start_date = self.start_date_picker.get_date()
+        end_date = self.end_date_picker.get_date()
         start_time = datetime.strptime(self.start_time_input.get(), '%H:%M').time()
         end_time = datetime.strptime(self.end_time_input.get(), '%H:%M').time()
-        start_datetime = datetime.combine(date, start_time)
-        end_datetime = datetime.combine(date, end_time)
+        start_datetime = datetime.combine(start_date, start_time)
+        end_datetime = datetime.combine(end_date, end_time)
 
         selected_interval = self.interval.get()
         provider = self.selected_provider.get()
@@ -187,7 +202,7 @@ class Viewer(tkinter.Frame):
 
 
 root = tkinter.Tk()
-root.geometry("650x750")
+root.geometry("750x750")
 root.title("Viewer")
 
 viewer = Viewer(root)
