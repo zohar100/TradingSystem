@@ -4,3 +4,4 @@ yfinance==0.1.77
 ib-insync==0.9.70
 pytz==2021.3
 tkcalendar==1.6.1
+plotly==5.9.0
