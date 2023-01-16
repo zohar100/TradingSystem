@@ -199,11 +199,3 @@ class Viewer(tkinter.Frame):
         talib_utilities.add_momentum_idicators_to_dataframe(selected_momentum_indicators, data)
         talib_utilities.add_volume_idicators_to_dataframe(selected_volume_indicators, data)
         plot_candlesticks(data, symbol, selected_candlestick_patterns)
-
-
-root = tkinter.Tk()
-root.geometry("750x750")
-root.title("Viewer")
-
-viewer = Viewer(root)
-viewer.mainloop()
