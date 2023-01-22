@@ -3,10 +3,11 @@ from datetime import time, date
 from typing import Callable
 
 from pandas import DataFrame, Timestamp
+from apis.api import DataProvider
 
 from trading_utilities import market_start_time
 from strategy import strategy
-from talib_utilities import talib_utilities
+from talib_utilities import talib_utilities, suggested_candlestick_patterns
 from apis.bars_api.bars_api_utilities import api_symbols_list
 
 from .gap_reversal_filter_stocks import gap_reversal_filter_stocks
@@ -22,25 +23,11 @@ class gap_reversal(strategy):
     def __init__(self, start_date: date, end_date: date):
 
         self.stocks: dict[str, ChosenStock] = {}
-        self.candlestick_patterns = [
-            "CDLDRAGONFLYDOJI",
-            "CDLGRAVESTONEDOJI",
-            "CDL3LINESTRIKE",
-            "CDLENGULFING",
-            "CDLEVENINGSTAR",
-            "CDLEVENINGDOJISTAR",
-            "CDLMORNINGSTAR",
-            "CDLMORNINGDOJISTAR",
-            "CDLHAMMER",
-            "CDLINVERTEDHAMMER",
-            "CDLSHOOTINGSTAR",
-            "CDLHANGINGMAN",
-            "CDLPIERCING"
-        ]
+        self.candlestick_patterns = suggested_candlestick_patterns
         self.risk = 50
 
-        ib_app = IB()
-        ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
+        # ib_app = IB()
+        # ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
 
         strategy.__init__(
             self,
@@ -49,13 +36,13 @@ class gap_reversal(strategy):
             symbols=[],
             start_time=strategy_start_time,
             end_time=strategy_end_time,
-            # data_provider=DataProvider.IB_API,
-            ib_app=ib_app,
+            data_provider=DataProvider.poly_api,
+            # ib_app=ib_app,
             custom_talib_instance=extended_talib,
             candlestick_patterns=self.candlestick_patterns,
             momentum_indicators=["RSI"],
             support_and_resistance_config={
-                "interval": "1 hour",
+                "interval": "1h",
                 "durationInDays": 30
             }
         )
@@ -69,8 +56,7 @@ class gap_reversal(strategy):
         for chosen_stock in filter_stock_service.chosen_stocks:
             self.stocks[chosen_stock.symbol] = chosen_stock
         self.symbols = list(self.stocks.keys())
-        # RUN LOGIC TO FIND CHOSENSTOCKS
-    
+
     def run_logic(self, symbol: str, market_data: DataFrame):
         super().run_logic(symbol, market_data)
         stock = self.stocks[symbol]
