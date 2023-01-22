@@ -4,15 +4,14 @@
 from typing import Callable, Literal
 from ib_insync import IB
 from pandas import DataFrame, Timestamp
-from strategy import DataProvider
 from datetime import date, datetime
 from support_and_resistance.support_and_resistance import support_and_resistance
 from trading_utilities import trading_utilities, pre_market_start_time, market_end_time, market_start_time
 from .gap_reversal_models import ChosenStock
-from apis.ib_api import ib_api, BarType as IbBarTypes, get_bars_dto as get_ib_bars_dto
-from apis.bars_api import bars_api, BarType as HttpBarTypes, get_bars_dto as get_http_bars_dto
+from apis import api, get_bars_dto, DataProvider
 from .gap_reversal_models import db
 from trading_calculations import trading_calculations
+
 
 class gap_reversal_filter_stocks:
     def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
@@ -20,11 +19,11 @@ class gap_reversal_filter_stocks:
         # assert len(symbols_list) > 0, "Symbols list is empty"
         assert date is not None, "Date most be set"
 
-        if data_provider == DataProvider.IB_API:
+        if data_provider == DataProvider.ib_api:
             assert ib_app is not None, "If IB_API is the provider ib_app is required" 
         
         db.connection()
-        # db.drop_tables([ChosenStock])
+        db.drop_tables([ChosenStock])
         db.create_tables([ChosenStock])
 
         self.data_provider = data_provider
@@ -53,11 +52,11 @@ class gap_reversal_filter_stocks:
         print("Chosen stocks not found in the DB")
         for symbol in self.symbols_list:
             print(f"Getting bars for {symbol}")
-            # try:
+
             last_trading_day_bars = self.get_all_last_trading_day_bars(symbol)
             bars_from_market_open_time = self.get_bars_from_market_open_time(symbol)
-            # except Exception as e:
-            #     continue
+            print(bars_from_market_open_time)
+
 
             if len(last_trading_day_bars) <= 0 or len(bars_from_market_open_time) <= 0:
                 print(f"Error getting bars for {symbol}: Bars not available")
@@ -74,28 +73,14 @@ class gap_reversal_filter_stocks:
     def get_all_last_trading_day_bars(self, symbol: str) -> DataFrame:
         start_date_time = datetime.combine(self.last_trading_date, market_start_time)
         end_date_time = datetime.combine(self.last_trading_date, market_end_time)
-        
-        if self.data_provider == DataProvider.BARS_API:
-            bar_params = get_http_bars_dto(HttpBarTypes.ONE.value, [symbol], start_date_time, end_date_time)
-            bars = bars_api.get_bars(bar_params)
-            return bars
-        else:
-            bar_params = get_ib_bars_dto(IbBarTypes.ONE.value, symbol, start_date_time, end_date_time)
-            bars = ib_api.get_bars(self.ib_app, bar_params)
-            return bars
+        params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
+        return api.get_bars(params)
     
     def get_bars_from_market_open_time(self, symbol: str) -> DataFrame:
         start_date_time = datetime.combine(self.date, pre_market_start_time)
         end_date_time = datetime.combine(self.date, market_start_time)
-        
-        if self.data_provider == DataProvider.BARS_API:
-            bar_params = get_http_bars_dto(HttpBarTypes.ONE.value, [symbol], start_date_time, end_date_time)
-            bars = bars_api.get_bars(bar_params)
-            return bars
-        else:
-            bar_params = get_ib_bars_dto(IbBarTypes.ONE.value, symbol, start_date_time, end_date_time)
-            bars = ib_api.get_bars(self.ib_app, bar_params)
-            return bars  
+        params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
+        return api.get_bars(params)
 
     def get_relevant_support_points(self, action: Literal['BUY', 'SELL'], yesterday_close: int, support_and_resistance_levels: list[tuple[Timestamp, float]]) -> tuple[float, float] or None:
         support = support_and_resistance.find_closest_support_point(action, yesterday_close, support_and_resistance_levels)
@@ -117,7 +102,8 @@ class gap_reversal_filter_stocks:
     
     def check_for_chosen_stock(self, symbol: str, last_trading_day_bars: DataFrame, pre_market_to_open_bars: DataFrame) -> ChosenStock or None:
         last_day_volume = last_trading_day_bars["Volume"].values
-        is_last_day_had_volume_zero = 0 in last_day_volume
+        # Check for len because some api dont return bars with volume 0
+        is_last_day_had_volume_zero = 0 in last_day_volume or len(last_day_volume) < 390
         if is_last_day_had_volume_zero:
             return None
         
