@@ -2,18 +2,14 @@ from typing import Literal
 import talib
 from datetime import datetime, date, time, timedelta
 from apis import api, get_bars_dto, DataProvider
-from enum import Enum
 from ib_insync import IB
 from pandas import DataFrame, Timestamp
 from trading_utilities import trading_utilities
 from trading_calculations import trading_calculations
 from talib_utilities import talib_utilities
 from utilities import utilities
-from apis.ib_api import ib_api
-from apis.ib_api.dto.get_bars_dto import get_bars_dto as get_ib_bars_dto
 from typing import TypedDict
 from support_and_resistance import support_and_resistance
-import plotly.graph_objects as go
 from typing import Callable
 
 class SupportAndResistance(TypedDict):
@@ -40,7 +36,7 @@ class strategy:
     ) -> None:
         
         self.ib_app = None
-        if data_provider == DataProvider.ib_api or self.is_support_and_resistance_selected(support_and_resistance_config):
+        if data_provider == DataProvider.ib_api:
             assert ib_app is not None, "ib_app must be provider if you choose Interactive to be the data provider"
             self.ib_app = ib_app
 
@@ -68,13 +64,11 @@ class strategy:
     def is_support_and_resistance_selected(self, support_and_resistance: SupportAndResistance):
         return "durationInDays" in support_and_resistance and "interval" in support_and_resistance
     
-    #TODO - use api class instead of ib
     def get_snp_data(self, symbol: str, date: date):
         end_date_time = datetime.combine(date, self.strategy_start_time)
         start_date_time = end_date_time - timedelta(days=self.support_and_resistance["durationInDays"])
-        params = get_ib_bars_dto(self.support_and_resistance["interval"], symbol, start_date_time, end_date_time, True)
-        data = ib_api.get_bars(self.ib_app ,params)
-        return data
+        params = get_bars_dto(self.data_provider, self.support_and_resistance["interval"], symbol, start_date_time, end_date_time, self.ib_app)
+        return api.get_bars(params)
     
     def get_snp_levels(self, symbol: str, date: date):
         support_and_resistance_levels = None
@@ -168,7 +162,7 @@ class strategy:
     
     def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
         params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
-        return api.get_bars()
+        return api.get_bars(params)
 
     
     
