@@ -6,12 +6,13 @@ from ib_insync import IB
 from pandas import DataFrame, Timestamp
 from datetime import date, datetime
 from support_and_resistance.support_and_resistance import support_and_resistance
+from talib_utilities import talib_utilities, suggested_candlestick_patterns
 from trading_utilities import trading_utilities, pre_market_start_time, market_end_time, market_start_time
 from .gap_reversal_models import ChosenStock
 from apis import api, get_bars_dto, DataProvider
 from .gap_reversal_models import db
 from trading_calculations import trading_calculations
-
+from itertools import repeat
 
 class gap_reversal_filter_stocks:
     def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
@@ -81,6 +82,16 @@ class gap_reversal_filter_stocks:
         end_date_time = datetime.combine(self.date, market_start_time)
         params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
         return api.get_bars(params)
+    
+    def get_four_days_bars(self, symbol: str) -> DataFrame:
+        start_date_time = self.date
+        end_date_time = self.date
+        # Get valid four days back date
+        for i in repeat(None, 4):
+            end_date_time = trading_utilities.get_last_trading_date(end_date_time)
+
+        params = get_bars_dto(self.data_provider, '1d', symbol, start_date_time, end_date_time, self.ib_app)
+        return api.get_bars(params)
 
     def get_relevant_support_points(self, action: Literal['BUY', 'SELL'], yesterday_close: int, support_and_resistance_levels: list[tuple[Timestamp, float]]) -> tuple[float, float] or None:
         support = support_and_resistance.find_closest_support_point(action, yesterday_close, support_and_resistance_levels)
@@ -136,6 +147,13 @@ class gap_reversal_filter_stocks:
         
         gap = trading_calculations.gap_percentage(today_open_price, yesterday_close_price, direction)
 
+        last_four_days_bars = self.get_four_days_bars(symbol)
+        talib_utilities.add_candlestick_patterns_to_dataframe(suggested_candlestick_patterns, last_day_volume)
+        patterns = []
+        for candlestick_pattern in suggested_candlestick_patterns:
+            if last_four_days_bars[candlestick_pattern].values[-1] != "N/A":
+                patterns.append(talib_utilities.get_candlestick_pattern_label(candlestick_pattern))
+
         return ChosenStock(
             symbol=symbol,
             action=direction,
@@ -145,5 +163,6 @@ class gap_reversal_filter_stocks:
             pre_market_volume=pre_market_volume,
             gap=gap,
             support=float(relevant_support_resistance_points[0]),
-            resistance=float(relevant_support_resistance_points[1])
+            resistance=float(relevant_support_resistance_points[1]),
+            patterns=', '.join(patterns)
         )

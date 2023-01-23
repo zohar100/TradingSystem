@@ -4,6 +4,7 @@ from pandas import DataFrame
 import talib
 import pandas_ta 
 from .talib_consts import candlestick_pattern_label
+from .extended_talib import talib as extended_talib
 
 class talib_utilities:
     @staticmethod
@@ -11,7 +12,7 @@ class talib_utilities:
         return candlestick_pattern_label[value]
     
     @staticmethod
-    def add_candlestick_patterns_to_dataframe(candlestick_patterns: list[str], market_data: DataFrame, talib_instance=talib):
+    def add_candlestick_patterns_to_dataframe(candlestick_patterns: list[str], market_data: DataFrame):
         if not len(candlestick_patterns):
             return market_data
         open = market_data['Open']
@@ -19,7 +20,7 @@ class talib_utilities:
         low = market_data['Low']
         close = market_data['Close']
         for candle in candlestick_patterns:
-            patterns = getattr(talib_instance, candle)(open, high, low, close)
+            patterns = getattr(extended_talib, candle)(open, high, low, close)
             for index,p in patterns.items():
                 if p > 0:
                     patterns[index] = "BUY"

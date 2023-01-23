@@ -32,3 +32,4 @@ class ChosenStock(BaseModel):
     support = DecimalField(decimal_places=2, default=0.00)
     resistance = DecimalField(decimal_places=2, default=0.00)
     date = DateField()
+    patterns=TextField(null=True)

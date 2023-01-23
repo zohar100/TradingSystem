@@ -28,7 +28,6 @@ class strategy:
         data_provider: DataProvider=DataProvider.bars_api, 
         ib_app: IB=None, 
         commition: float = 1.8,
-        custom_talib_instance=talib,
         candlestick_patterns: list[str]=[],
         momentum_indicators: list[str]=[],
         volume_indicators: list[str]=[],
@@ -47,8 +46,6 @@ class strategy:
         self.strategy_end_time = end_time
         
         self.data_provider = data_provider
-
-        self.custom_talib_instance =custom_talib_instance
 
         self.commition = commition
         self.symbols = symbols
@@ -91,7 +88,7 @@ class strategy:
                 market_data = self.get_data(start_datetime, end_datetime, symbol)
                 talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
                 talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
-                talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data, self.custom_talib_instance)
+                talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
                 self.market_data[symbol] = market_data
                 self.run_logic(symbol, market_data)
 
