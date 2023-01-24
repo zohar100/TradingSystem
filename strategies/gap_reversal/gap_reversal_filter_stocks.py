@@ -17,7 +17,6 @@ from itertools import repeat
 class gap_reversal_filter_stocks:
     def __init__(self, symbols_list: list[str], date: date, data_provider: DataProvider, ib_app: IB, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
 
-        # assert len(symbols_list) > 0, "Symbols list is empty"
         assert date is not None, "Date most be set"
 
         if data_provider == DataProvider.ib_api:
@@ -39,6 +38,21 @@ class gap_reversal_filter_stocks:
         self.chosen_stocks: list[ChosenStock] = []
 
         self.get_snp_levels = get_snp_levels
+        
+        self.spy_gap = self.get_spy_gap()
+
+    def get_spy_gap(self):
+        params = get_bars_dto(self.data_provider, '1d', 'SPY', self.last_trading_date, self.date)
+        bars = api.get_bars(params)
+
+        if len(bars.index) < 2:
+            print("Cannot get SPY gap")
+            return None
+
+        yesterday_close = bars['Close'][-1]
+        today_open = bars['Open'][0]
+        direction = 'BUY' if today_open >= yesterday_close else 'SELL'
+        return trading_calculations.gap_percentage(today_open, yesterday_close, direction)
 
     def get_chosen_stocks(self):
 
@@ -164,5 +178,6 @@ class gap_reversal_filter_stocks:
             gap=gap,
             support=float(relevant_support_resistance_points[0]),
             resistance=float(relevant_support_resistance_points[1]),
-            patterns=', '.join(patterns)
+            patterns=', '.join(patterns),
+            spy_gap=self.spy_gap
         )

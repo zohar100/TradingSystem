@@ -33,3 +33,4 @@ class ChosenStock(BaseModel):
     resistance = DecimalField(decimal_places=2, default=0.00)
     date = DateField()
     patterns=TextField(null=True)
+    spy_gap=DecimalField(null=True)
