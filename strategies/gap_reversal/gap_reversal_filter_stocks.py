@@ -37,6 +37,8 @@ class gap_reversal_filter_stocks:
 
         self.chosen_stocks: list[ChosenStock] = []
 
+        self.stock_snr: dict[str, list[tuple[Timestamp, float]]] = {}
+
         self.get_snp_levels = get_snp_levels
         
         self.spy_gap = self.get_spy_gap()
@@ -159,8 +161,9 @@ class gap_reversal_filter_stocks:
         if not self.today_open_is_geater_than_support(direction, today_open_price, float(relevant_support_resistance_points[0])):
             return None
         
-        gap = trading_calculations.gap_percentage(today_open_price, yesterday_close_price, direction)
+        self.stock_snr[symbol] = support_and_resistance_levels
 
+        gap = trading_calculations.gap_percentage(today_open_price, yesterday_close_price, direction)
         last_four_days_bars = self.get_four_days_bars(symbol)
         talib_utilities.add_candlestick_patterns_to_dataframe(suggested_candlestick_patterns, last_day_volume)
         patterns = []

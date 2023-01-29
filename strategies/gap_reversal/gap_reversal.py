@@ -5,6 +5,7 @@ from typing import Callable
 from pandas import DataFrame, Timestamp
 from apis.api import DataProvider
 
+from support_and_resistance import support_and_resistance
 from trading_utilities import market_start_time
 from strategy import strategy
 from talib_utilities import talib_utilities, suggested_candlestick_patterns
@@ -24,6 +25,7 @@ class gap_reversal(strategy):
         self.candlestick_patterns = suggested_candlestick_patterns
         self.risk = 50
 
+        self.stocks_snr: dict[str, list[tuple[Timestamp, float]]] = {}
         # ib_app = IB()
         # ib_app.connect(host='127.0.0.1', port=7497, clientId=1)
 
@@ -48,16 +50,32 @@ class gap_reversal(strategy):
     def before_run_logic(self, date: date, get_snp_levels: Callable[[str, date], (list[tuple[Timestamp, float]] or None)]):
         super().before_run_logic(date, get_snp_levels)
         self.stocks = {}
+        self.stocks_snr = {}
+
         filter_stock_service = gap_reversal_filter_stocks(api_symbols_list, date, self.data_provider, self.ib_app, get_snp_levels)
         filter_stock_service.get_chosen_stocks()
         for chosen_stock in filter_stock_service.chosen_stocks:
             self.stocks[chosen_stock.symbol] = chosen_stock
+        
         self.symbols = list(self.stocks.keys())
+        self.stocks_snr = filter_stock_service.stock_snr
 
     def run_logic(self, symbol: str, market_data: DataFrame):
         super().run_logic(symbol, market_data)
         stock = self.stocks[symbol]
         for datetime ,bar in market_data.iterrows():
+            need_to_find_new_resistance = bar["Close"] > stock.support if stock.action == "BUY" else bar["Close"] < stock.support
+            need_to_find_new_support = bar["Close"] < stock.resistance if stock.action == "BUY" else bar["Close"] > stock.resistance
+            
+            if need_to_find_new_resistance:
+                new_ress = support_and_resistance.find_closest_support_point(stock.action, stock.resistance, self.stocks_snr[symbol])
+                if new_ress:
+                    stock.resistance = new_ress
+            if need_to_find_new_support:
+                new_supp = support_and_resistance.find_closest_support_point(stock.action, stock.support, self.stocks_snr[symbol])
+                if new_supp:
+                    stock.support = new_supp
+
             if bar["Volume"] <= 0:
                 self.symbols.remove(symbol)
                 del self.stocks[symbol]
