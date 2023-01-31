@@ -1,7 +1,9 @@
 import pandas as pd
+import datetime
 
 from ib_insync import BarData
 from trading_utilities import new_york_timezone
+
 
 
 class ib_api_utilities:
@@ -9,7 +11,8 @@ class ib_api_utilities:
     def format_bars_resonse(response: list[BarData]) -> pd.DataFrame:
         dict_list = [bar.__dict__ for bar in response]
         for bar in dict_list:
-            bar["date"] = bar["date"].astimezone(new_york_timezone).replace(tzinfo=None)
+            if isinstance(bar["date"], datetime.datetime):
+                bar["date"] = bar["date"].astimezone(new_york_timezone).replace(tzinfo=None)
             bar["volume"] = bar["volume"] * 100
         df = pd.DataFrame.from_dict(dict_list)
         if not len(df.columns):
