@@ -44,7 +44,7 @@ class gap_reversal_filter_stocks:
         self.spy_gap = self.get_spy_gap()
 
     def get_spy_gap(self):
-        params = get_bars_dto(self.data_provider, '1d', 'SPY', self.last_trading_date, self.date)
+        params = get_bars_dto(self.data_provider, '1d', 'SPY', self.last_trading_date, self.date, self.ib_app)
         bars = api.get_bars(params)
 
         if len(bars.index) < 2:
