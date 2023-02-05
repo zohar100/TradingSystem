@@ -4,33 +4,35 @@ from datetime import datetime
 from os import path
 
 from pandas import DataFrame
+import pandas as pd
 
 from apis.api import BarTypes
 
 bar_fields_config = [
     {
-        'field_name': 'Datetime',
-        'field_type': 'datetime',
+        'name': 'Datetime',
+        'type': 'datetime',
+        'format': '%y-%m-%d %H:%M:%S'
     },
     {
-        'field_name': 'Open',
-        'field_type': 'float'
+        'name': 'Open',
+        'type': 'float'
     },
     {
-        'field_name': 'High',
-        'field_type': 'float'
+        'name': 'High',
+        'type': 'float'
     },
     {
-        'field_name': 'Low',
-        'field_type': 'float'
+        'name': 'Low',
+        'type': 'float'
     },
     {
-        'field_name': 'Close',
-        'field_type': 'float'
+        'name': 'Close',
+        'type': 'float'
     },
     {
-        'field_name': 'Volume',
-        'field_type': 'float'
+        'name': 'Volume',
+        'type': 'float'
     },
 ]
 
@@ -54,20 +56,33 @@ class data:
 
         return None
     
-    def get_bar_from_file_line(bar_line: str) -> dict:
-        bar_fields = bar_line.split(',')
-        for field, index in bar_fields_config:
-            pass
-        pass
+    def get_bar_from_file_line(self, bar_line: str) -> dict:
+        bar_values = bar_line.split(',')
+        bar = {}
+        for index, field_config in enumerate(bar_fields_config):
+            field_name = field_config['name']
+            
+            field_type = field_config['type']
+            value = bar_values[index]
+            if field_type == 'float':
+                value = float(value)
+            if field_type == 'datetime':
+                date_format = field_config['format']
+                value = datetime.strptime(value, date_format)
 
-    def get_bars_from_file(symbol_file_path: str) -> DataFrame:
+            bar[field_name] = value
+
+        return bar
+
+    def get_bars_from_file_lines(self, symbol_file_path: str) -> DataFrame:
         file_lines = open(symbol_file_path, 'r').readlines()
         bars_data_frame = DataFrame()
         
         for line in file_lines:
-            pass
+            bar = self.get_bar_from_file_line(line)
+            bars_data_frame = pd.concat([bar, bars_data_frame.loc[:]]).reset_index(drop=True)
         
-        return
+        return bars_data_frame
 
     def read(self, symbol: str, interval: BarTypes, start_datetime: datetime, end_datetime: datetime):
         symbol_file_path = self.is_file_path_exist(symbol, interval)
@@ -76,7 +91,7 @@ class data:
             return print(f'No data found for {symbol} {interval}')
         
         file_lines = open(symbol_file_path, 'r').readlines()
-        print(file_lines[0])
+        return self.get_bars_from_file_lines(file_lines)
 
     def write(self,):
         pass
