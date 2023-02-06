@@ -66,7 +66,7 @@ class data:
 
         return bars_data_frame
 
-    def read(self, symbol: str, interval: BarTypes, start_datetime: datetime, end_datetime: datetime):
+    def read(self, symbol: str, interval: BarTypes):
         symbol_file_path = self.is_file_path_exist(symbol, interval)
 
         if not symbol_file_path:
