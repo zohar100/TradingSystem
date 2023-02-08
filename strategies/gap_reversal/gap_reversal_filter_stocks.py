@@ -23,7 +23,7 @@ class gap_reversal_filter_stocks:
             assert ib_app is not None, "If IB_API is the provider ib_app is required" 
         
         db.connection()
-        db.drop_tables([ChosenStock])
+        # db.drop_tables([ChosenStock])
         db.create_tables([ChosenStock])
 
         self.data_provider = data_provider
@@ -72,7 +72,6 @@ class gap_reversal_filter_stocks:
 
             last_trading_day_bars = self.get_all_last_trading_day_bars(symbol)
             bars_from_market_open_time = self.get_bars_from_market_open_time(symbol)
-            print(bars_from_market_open_time)
 
 
             if len(last_trading_day_bars) <= 0 or len(bars_from_market_open_time) <= 0:

@@ -10,6 +10,8 @@ from .polygon_api import get_bars_dto as polygon_get_bars_dto
 from .polygon_api.polygon_api import polygon_api
 from .bars_api import get_bars_dto as bars_get_bars_dto, bars_api
 
+from .text_files import data_manipulator
+
 class BarTypes(str, Enum):
     one_minute = '1m'
     tow_minutes = '2m'
@@ -22,6 +24,7 @@ class DataProvider(str, Enum):
     yf_api='yf_api',
     bars_api='bars_api'
     poly_api = 'poly_api'
+    text_files = 'text_files'
 
 provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = { 
     DataProvider.ib_api: {
@@ -47,6 +50,12 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
         BarTypes.five_minutes: '5 minute',
         BarTypes.one_hour: '1 hour',
         BarTypes.one_day: '1 day'
+    },
+    DataProvider.text_files: {
+        BarTypes.one_minute: '1min',
+        BarTypes.tow_minutes: '2min',
+        BarTypes.five_minutes: '5min',
+        BarTypes.one_hour: '1hour',
     }
 }
 
@@ -112,3 +121,9 @@ class api:
         params = polygon_get_bars_dto(type, symbol, start_date_time, end_date_time)
         data = polygon_api.get_bars(params)
         return data
+    
+    @staticmethod
+    def _get_data_text_files(type: str, start_date_time: datetime, end_date_time: datetime, symbol: str):
+        all_symbol_data = data_manipulator.read(symbol, type)
+        requested_symbol_data = all_symbol_data.loc[start_date_time:end_date_time]
+        return requested_symbol_data
