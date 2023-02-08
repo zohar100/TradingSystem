@@ -13,7 +13,8 @@ data_provider_label = {
     DataProvider.bars_api: 'Our Api',
     DataProvider.yf_api: 'Yahoo Finance',
     DataProvider.poly_api: 'Polygon',
-    DataProvider.ib_api: 'Interactive Brokers'
+    DataProvider.ib_api: 'Interactive Brokers',
+    DataProvider.text_files: 'Text Files'
 }
 
 indicators = suggested_volume_indicators + suggested_momentum_indicators
