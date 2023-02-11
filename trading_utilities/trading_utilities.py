@@ -3,7 +3,7 @@ from pandas import DataFrame
 import pandas as pd
 import pandas_market_calendars as mcal
 import datetime
-from datetime import date, time
+from datetime import date, time, datetime as dt
 
 import pytz
 
@@ -31,6 +31,14 @@ class trading_utilities:
         schedule = schedule["Dates"]
         last_trading_date = schedule[-2]
         return last_trading_date
+    
+    @staticmethod
+    def attach_market_start_time(date: date):
+        return dt.combine(date, market_start_time)
+
+    @staticmethod
+    def attach_market_end_time(date: date):
+        return dt.combine(date, market_end_time)
     
     @staticmethod
     def check_pl(action: str, bar: DataFrame, take_profit: float, stop_loss: float = None):

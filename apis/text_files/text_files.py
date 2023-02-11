@@ -15,7 +15,7 @@ class text_files:
 
     def is_file_path_exist(self, symbol: str, interval: str) -> None or str:
         file_name = f'{symbol}_{interval}.txt'
-        symbol_file_path = path.join(self.market_data_directory, symbol, file_name)
+        symbol_file_path = path.join(self.market_data_directory, file_name)
         is_symbol_file_exist = path.isfile(symbol_file_path)
 
         if is_symbol_file_exist:

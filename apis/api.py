@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from ib_insync import IB
 from pandas import DataFrame
@@ -12,10 +12,13 @@ from .bars_api import get_bars_dto as bars_get_bars_dto, bars_api
 
 from .text_files import data_manipulator
 
+from trading_utilities import trading_utilities
+
 class BarTypes(str, Enum):
     one_minute = '1m'
     tow_minutes = '2m'
     five_minutes = '5m'
+    thirty_minutes = '30m'
     one_hour = '1h'
     one_day = '1d'
 
@@ -31,6 +34,7 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
         BarTypes.one_minute: '1 min',
         BarTypes.tow_minutes: '2 mins',
         BarTypes.five_minutes: '5 mins',
+        BarTypes.thirty_minutes: '30 mins',
         BarTypes.one_hour: '1 hour',
         BarTypes.one_day: '1 day'
     },
@@ -38,6 +42,7 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
         BarTypes.one_minute: '1m',
         BarTypes.tow_minutes: '2m',
         BarTypes.five_minutes: '5m',
+        BarTypes.thirty_minutes: '30m',
         BarTypes.one_hour: '1h',
         BarTypes.one_day: '1d'
     },
@@ -48,6 +53,7 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
         BarTypes.one_minute: '1 minute',
         BarTypes.tow_minutes: '2 minute',
         BarTypes.five_minutes: '5 minute',
+        BarTypes.thirty_minutes: '30 minute',
         BarTypes.one_hour: '1 hour',
         BarTypes.one_day: '1 day'
     },
@@ -55,7 +61,9 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
         BarTypes.one_minute: '1min',
         BarTypes.tow_minutes: '2min',
         BarTypes.five_minutes: '5min',
+        BarTypes.thirty_minutes: '30min',
         BarTypes.one_hour: '1hour',
+        BarTypes.one_day: '1day',
     }
 }
 
@@ -124,6 +132,32 @@ class api:
     
     @staticmethod
     def _get_data_text_files(type: str, start_date_time: datetime, end_date_time: datetime, symbol: str):
-        all_symbol_data = data_manipulator.read(symbol, type)
-        requested_symbol_data = all_symbol_data.loc[start_date_time:end_date_time]
-        return requested_symbol_data
+        available_intervals = provider_bar_type_map[DataProvider.text_files]
+        if type != available_intervals[BarTypes.one_day]:
+            all_symbol_data = data_manipulator.read(symbol, type)
+            requested_symbol_data = all_symbol_data.loc[start_date_time:end_date_time]
+            return requested_symbol_data
+        
+        all_symbol_data = data_manipulator.read(symbol, available_intervals[BarTypes.thirty_minutes])
+
+        start_date_time = trading_utilities.attach_market_start_time(start_date_time.date())
+        end_date_time = trading_utilities.attach_market_end_time(end_date_time.date())
+        symbol_data_in_range = all_symbol_data.loc[start_date_time:end_date_time]
+
+        uniqe_dates: list[date] = list(set(symbol_data_in_range.index.date.tolist()))
+        one_day_bars = []
+        for uniqe_date in uniqe_dates:
+            start = trading_utilities.attach_market_start_time(uniqe_date)
+            end = trading_utilities.attach_market_end_time(uniqe_date)
+            date_data = symbol_data_in_range.loc[start:end]
+            bar = {
+                'Datetime': uniqe_date,
+                'Open': date_data['Open'][0],
+                'High': max(date_data['High']),
+                'Low': min(date_data['Low']),
+                'Close': date_data['Close'][-1],
+                'Volume': sum(date_data['Volume'])
+            }
+            one_day_bars.append(bar)
+        return DataFrame(one_day_bars).set_index('Datetime').sort_index()
+    
