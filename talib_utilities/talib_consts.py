@@ -62,6 +62,26 @@ candlestick_pattern_label = {
     "CDLXSIDEGAP3METHODS": "Upside/Downside Gap Three Methods",
 }
 
+overlap_studies_label = {
+    'BBANDS': "Bollinger Bands",
+    'DEMA': "Double Exponential Moving Average",
+    'EMA': "Exponential Moving Average",
+    'HT_TRENDLINE': "Hilbert Transform - Instantaneous Trendline",
+    'KAMA': "Kaufman Adaptive Moving Average",
+    'MA': "Moving average",
+    'MAMA': "MESA Adaptive Moving Average",
+    'MAVP': "Moving average with variable period",
+    'MIDPOINT': "MidPoint over period",
+    'MIDPRICE': "Midpoint Price over period",
+    'SAR': "Parabolic SAR",
+    'SAREXT': "Parabolic SAR - Extended",
+    'SMA': "Simple Moving Average",
+    'T3': "Triple Exponential Moving Average (T3)",
+    'TEMA': "Triple Exponential Moving Average",
+    'TRIMA': "Triangular Moving Average",
+    'WMA': "Weighted Moving Average",
+}
+
 momentum_indicator_label = {
     'ADX': "Average Directional Movement", 
     'ADXR': "Average Directional Movement Index Rating", 
@@ -109,6 +129,7 @@ volatility_indicator_label = {
 }
 
 candlestick_patterns = candlestick_pattern_label.keys()
+overlap_studies = overlap_studies_label.keys()
 momentum_indicators = momentum_indicator_label.keys()
 volume_indicators = volume_indicator_label.keys()
 volatility_indicators = volatility_indicator_label.keys()
@@ -130,5 +151,6 @@ suggested_candlestick_patterns = [
     "CDLPIERCING"
 ]
 
+suggested_overlap_studies = ["BBANDS", "MA"]
 suggested_momentum_indicators = ["RSI"]
 suggested_volume_indicators = ["VWAP"]
