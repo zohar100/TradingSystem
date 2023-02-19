@@ -44,6 +44,8 @@ class talib_utilities:
                 market_data['lowerband'] = lower
             if indicator == "SMA":
                 market_data[indicator] =  func_to_exec(close, timeperiod=8)
+            if indicator == "EMA":
+                market_data[indicator] =  func_to_exec(close, timeperiod=8)
     
     @staticmethod
     def add_momentum_idicators_to_dataframe(indicators: list[str], market_data: DataFrame):

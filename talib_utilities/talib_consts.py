@@ -151,6 +151,6 @@ suggested_candlestick_patterns = [
     "CDLPIERCING"
 ]
 
-suggested_overlap_studies = ["BBANDS", "MA"]
+suggested_overlap_studies = ["BBANDS", "MA", "EMA"]
 suggested_momentum_indicators = ["RSI"]
 suggested_volume_indicators = ["VWAP"]
