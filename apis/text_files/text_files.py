@@ -14,7 +14,7 @@ class text_files:
         assert is_directory_exist, 'The specify directory not exist'
 
     def is_file_path_exist(self, symbol: str, interval: str) -> None or str:
-        file_name = f'{symbol}_{interval}.txt'
+        file_name = f'{interval}/{symbol}_{interval}.txt'
         symbol_file_path = path.join(self.market_data_directory, file_name)
         is_symbol_file_exist = path.isfile(symbol_file_path)
 
