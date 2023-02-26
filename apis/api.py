@@ -59,7 +59,6 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
     },
     DataProvider.text_files: {
         BarTypes.one_minute: '1min',
-        BarTypes.tow_minutes: '2min',
         BarTypes.five_minutes: '5min',
         BarTypes.thirty_minutes: '30min',
         BarTypes.one_hour: '1hour',
