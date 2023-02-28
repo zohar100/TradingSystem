@@ -41,6 +41,10 @@ class trading_utilities:
         return dt.combine(date, market_end_time)
     
     @staticmethod
+    def attach_pre_market_start_time(date: date):
+        return dt.combine(date, pre_market_start_time)
+    
+    @staticmethod
     def check_pl(action: str, bar: DataFrame, take_profit: float, stop_loss: float = None):
         if action == "BUY":
             if bar["High"] >= take_profit or bar["Close"] >= take_profit:
