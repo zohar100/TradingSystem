@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, datetime, time
+
 from typing import Callable
 
 from pandas import DataFrame, Timestamp
@@ -12,6 +13,9 @@ STRATEGY_SYMBOL = "SPY"
 
 class spy(strategy):
     def __init__(self, start_date: date, end_date: date):
+
+        self.risk = 16000
+
         strategy.__init__(
             self,
             start_date=start_date,
@@ -28,6 +32,7 @@ class spy(strategy):
             interval=BarTypes.one_minute
         )
         
+        self.last_trading_date: date = None
         self.last_trading_date_data: DataFrame = None
         self.current_date_snp = list[tuple[Timestamp, float]]
         
@@ -49,9 +54,9 @@ class spy(strategy):
         self.market_end_datetime = trading_utilities.attach_market_end_time(date)
         self.pre_market_start_datetime = trading_utilities.attach_pre_market_start_time(date)
 
-        last_trading_date = trading_utilities.get_last_trading_date(date)
-        start = trading_utilities.attach_market_start_time(last_trading_date)
-        end = trading_utilities.attach_market_end_time(last_trading_date)
+        self.last_trading_date = trading_utilities.get_last_trading_date(date)
+        start = trading_utilities.attach_market_start_time(self.last_trading_date)
+        end = trading_utilities.attach_market_end_time(self.last_trading_date)
         self.last_trading_date_data = self.get_data_with_requirements(start, end, STRATEGY_SYMBOL)
     
     def run_logic(self, symbol: str, market_data:  dict[str, DataFrame]):
@@ -84,6 +89,18 @@ class spy(strategy):
             return
         
         print(f"We going to make a {market_direction} trade")
+
+        last_trading_five_min_time = time(15, 55)
+        last_trading_five_min_start = datetime.combine(self.last_trading_date, last_trading_five_min_time)
+        last_trading_end_date_time = trading_utilities.attach_market_end_time(self.last_trading_date)
+        last_trading_day_data_last_five_min = self.last_trading_date_data.loc[last_trading_five_min_start:last_trading_end_date_time]
+        # Everything fine we are about to make order
+        if market_direction == 'BUY':
+            take_profit = min(last_trading_day_data_last_five_min["Low"])
+        elif market_direction == 'SELL':
+            take_profit = max(last_trading_day_data_last_five_min["High"])
+        
+        quantity = round(self.risk / today_open)
 
     def after_run_logic(self, orders: list[dict]):
         super().after_run_logic(orders)
