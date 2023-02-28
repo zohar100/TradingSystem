@@ -1,7 +1,7 @@
 from typing import Literal
 import talib
 from datetime import datetime, date, time, timedelta
-from apis import api, get_bars_dto, DataProvider
+from apis import api, get_bars_dto, DataProvider, BarTypes
 from ib_insync import IB
 from pandas import DataFrame, Timestamp
 from trading_utilities import trading_utilities
@@ -31,7 +31,8 @@ class strategy:
         candlestick_patterns: list[str]=[],
         momentum_indicators: list[str]=[],
         volume_indicators: list[str]=[],
-        support_and_resistance_config: SupportAndResistance ={}
+        support_and_resistance_config: SupportAndResistance ={},
+        interval: BarTypes = BarTypes.one_minute
     ) -> None:
         
         self.ib_app = None
@@ -44,6 +45,8 @@ class strategy:
 
         self.strategy_start_time = start_time
         self.strategy_end_time = end_time
+
+        self.interval = interval
         
         self.data_provider = data_provider
 
@@ -73,6 +76,13 @@ class strategy:
             snp_data = self.get_snp_data(symbol, date)
             support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
         return support_and_resistance_levels
+    
+    def get_data_with_requirements(self, start_datetime: datetime, end_datetime: datetime, symbol: str):
+        market_data = self.get_data(start_datetime, end_datetime, symbol)
+        talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
+        talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
+        talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
+        return market_data
 
     def start(self):
         for date in utilities.daterange(self.start_date, self.end_date):
@@ -85,12 +95,8 @@ class strategy:
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
             for symbol in self.symbols:
-                market_data = self.get_data(start_datetime, end_datetime, symbol)
-                talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
-                talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
-                talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
-                self.market_data[symbol] = market_data
-                self.run_logic(symbol, market_data)
+                self.market_data[symbol] = self.get_data_with_requirements(start_datetime, end_datetime, symbol)
+                self.run_logic(symbol, self.market_data)
 
         self.after_run_logic(self.orders)
     
@@ -98,7 +104,7 @@ class strategy:
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
 
-    def run_logic(self, symbol: str, market_data: DataFrame):
+    def run_logic(self, symbol: str, market_data: dict[str, DataFrame]):
         # NEED THE INHERIT CLASS TO DEFINE THIS FUNCTION LOGIC 
         pass
     
@@ -158,7 +164,7 @@ class strategy:
         self.orders.append(order)
     
     def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_bars_dto(self.data_provider, '1m', symbol, start_date_time, end_date_time, self.ib_app)
+        params = get_bars_dto(self.data_provider, self.interval, symbol, start_date_time, end_date_time, self.ib_app)
         return api.get_bars(params)
 
     
