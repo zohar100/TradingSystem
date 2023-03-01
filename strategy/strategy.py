@@ -77,8 +77,8 @@ class strategy:
             support_and_resistance_levels = support_and_resistance.detect_level_method(snp_data)
         return support_and_resistance_levels
     
-    def get_data_with_requirements(self, start_datetime: datetime, end_datetime: datetime, symbol: str):
-        market_data = self.get_data(start_datetime, end_datetime, symbol)
+    def get_data_with_requirements(self, start_datetime: datetime, end_datetime: datetime, interval: BarTypes, symbol: str):
+        market_data = self.get_data(start_datetime, end_datetime, interval, symbol)
         talib_utilities.add_momentum_idicators_to_dataframe(self.momentum_indicators, market_data)
         talib_utilities.add_volume_idicators_to_dataframe(self.volume_indicators, market_data)
         talib_utilities.add_candlestick_patterns_to_dataframe(self.candlestick_patterns, market_data)
@@ -163,8 +163,8 @@ class strategy:
 
         self.orders.append(order)
     
-    def get_data(self, start_date_time: datetime, end_date_time: datetime, symbol: str) -> DataFrame:
-        params = get_bars_dto(self.data_provider, self.interval, symbol, start_date_time, end_date_time, self.ib_app)
+    def get_data(self, start_date_time: datetime, end_date_time: datetime, interval: BarTypes, symbol: str) -> DataFrame:
+        params = get_bars_dto(self.data_provider, interval, symbol, start_date_time, end_date_time, self.ib_app)
         return api.get_bars(params)
 
     

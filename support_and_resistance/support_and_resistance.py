@@ -35,16 +35,16 @@ class support_and_resistance:
         return levels
     
     @staticmethod
-    def find_closest_support_point(action: Literal['BUY', 'SELL'], today_open: int, support_and_resistance_levels: list[tuple[Timestamp, float]]):
+    def find_closest_support_point(action: Literal['BUY', 'SELL'], price: int, support_and_resistance_levels: list[tuple[Timestamp, float]]):
         levels_numbers = [s[1] for s in support_and_resistance_levels]
         closest = 0.0
         if action == 'BUY':
             for number in levels_numbers:
-                if number < today_open and (closest == 0 or number > closest):
+                if number < price and (closest == 0 or number > closest):
                     closest = number
         elif action == 'SELL':
             for number in levels_numbers:
-                if number > today_open and (closest == 0 or number < closest):
+                if number > price and (closest == 0 or number < closest):
                     closest = number
         return closest
     
