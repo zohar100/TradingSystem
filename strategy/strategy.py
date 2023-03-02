@@ -95,7 +95,7 @@ class strategy:
             start_datetime = datetime.combine(date, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
             for symbol in self.symbols:
-                self.market_data[symbol] = self.get_data_with_requirements(start_datetime, end_datetime, symbol)
+                self.market_data[symbol] = self.get_data_with_requirements(start_datetime, end_datetime, self.interval, symbol)
                 self.run_logic(symbol, self.market_data)
 
         self.after_run_logic(self.orders)

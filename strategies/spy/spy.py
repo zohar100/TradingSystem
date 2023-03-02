@@ -12,7 +12,7 @@ from talib_utilities import suggested_candlestick_patterns
 from trading_calculations import trading_calculations
 from support_and_resistance import support_and_resistance
 
-STRATEGY_SYMBOL = "SPY"
+STRATEGY_SYMBOL = "AAPL"
 
 class spy(strategy):
     def __init__(self, start_date: date, end_date: date):
@@ -60,21 +60,20 @@ class spy(strategy):
         pre_market_start_datetime = trading_utilities.attach_pre_market_start_time(date)
         self.pre_market_data = self.get_data_with_requirements(pre_market_start_datetime, self.market_start_datetime, BarTypes.one_minute, STRATEGY_SYMBOL)
 
-        # Get valid four days back date
-        days_go_back = 4
-        back_date = date
-        for _ in repeat(None, days_go_back):
-            back_date = trading_utilities.get_last_trading_date(back_date)
-        start_datetime = trading_utilities.attach_market_start_time(back_date)
-        end_datetime = trading_utilities.attach_market_end_time(date)
-        self.last_four_days_data = self.get_data_with_requirements(start_datetime, end_datetime, BarTypes.one_day, STRATEGY_SYMBOL)
-        mask = (trading_utilities.is_trading_day(self.last_four_days_data.index.date))
-        self.last_four_days_data = self.last_four_days_data.loc[mask]
-
         self.last_trading_date = trading_utilities.get_last_trading_date(date)
         start = trading_utilities.attach_market_start_time(self.last_trading_date)
         end = trading_utilities.attach_market_end_time(self.last_trading_date)
         self.last_trading_date_data = self.get_data_with_requirements(start, end, BarTypes.one_minute, STRATEGY_SYMBOL)
+
+        # Get valid four days back date
+        days_go_back = 4
+        back_dates = [self.last_trading_date]
+        for _ in repeat(None, days_go_back):
+            back_dates.append(trading_utilities.get_last_trading_date(back_dates[-1]))
+        start_datetime = trading_utilities.attach_market_start_time(back_dates[-1])
+        end_datetime = trading_utilities.attach_market_end_time(self.last_trading_date)
+        self.last_four_days_data = self.get_data_with_requirements(start_datetime, end_datetime, BarTypes.one_day, STRATEGY_SYMBOL)
+        self.last_four_days_data = self.last_four_days_data.loc[self.last_four_days_data.index.isin(back_dates)]
     
     def run_logic(self, symbol: str, market_data:  dict[str, DataFrame]):
         super().run_logic(symbol, market_data)
@@ -127,7 +126,7 @@ class spy(strategy):
             "support": support_and_resistance.find_closest_support_point(market_direction, today_open, self.current_date_snp),
             "resistance": support_and_resistance.find_closest_support_point("SELL" if market_direction == "BUY" else "BUY", today_open, self.current_date_snp),
         }
-        self.execute_order(STRATEGY_SYMBOL, market_direction, today_open, take_profit, quantity, 0, None, order_extra_fields)
+        self.execute_order(STRATEGY_SYMBOL, market_direction, today_open, take_profit, quantity, today_data.index[0], None, order_extra_fields)
 
     def after_run_logic(self, orders: list[dict]):
         super().after_run_logic(orders)
@@ -135,7 +134,7 @@ class spy(strategy):
             return
         print(f"Saving {len(self.orders)} orders....")
         keys = self.orders[0].keys()
-        with open(f'orders-test.csv', 'w', newline='') as output_file:
+        with open(f'{STRATEGY_SYMBOL}-test.csv', 'w', newline='') as output_file:
             dict_writer = csv.DictWriter(output_file, keys)
             dict_writer.writeheader()
             dict_writer.writerows(self.orders)

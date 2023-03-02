@@ -66,6 +66,7 @@ provider_bar_type_map: dict[DataProvider, dict[BarTypes, str]] = {
     }
 }
 
+cach_memory = {}
 
 class get_bars_dto:
     def __init__(self, provider: DataProvider, type: BarTypes, symbol: str, start_date: datetime, end_date: datetime, ib_app: IB = None):
@@ -131,13 +132,21 @@ class api:
     
     @staticmethod
     def _get_data_text_files(type: str, start_date_time: datetime, end_date_time: datetime, symbol: str):
+
+        cach_key = f'{type}|{symbol}'
+        is_data_cach = cach_key in cach_memory
         available_intervals = provider_bar_type_map[DataProvider.text_files]
         if type != available_intervals[BarTypes.one_day]:
-            all_symbol_data = data_manipulator.read(symbol, type)
+            all_symbol_data = cach_memory[cach_key].copy() if is_data_cach else data_manipulator.read(symbol, type)
+            if not is_data_cach:
+                cach_memory[cach_key] = all_symbol_data.copy()
             requested_symbol_data = all_symbol_data.loc[start_date_time:end_date_time]
             return requested_symbol_data
         
-        all_symbol_data = data_manipulator.read(symbol, available_intervals[BarTypes.thirty_minutes])
+        all_symbol_data = cach_memory[cach_key].copy() if is_data_cach else data_manipulator.read(symbol, available_intervals[BarTypes.thirty_minutes])
+
+        if not is_data_cach:
+            cach_memory[cach_key] = all_symbol_data.copy()
 
         start_date_time = trading_utilities.attach_market_start_time(start_date_time.date())
         end_date_time = trading_utilities.attach_market_end_time(end_date_time.date())
