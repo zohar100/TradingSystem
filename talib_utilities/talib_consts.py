@@ -60,6 +60,12 @@ candlestick_pattern_label = {
     "CDLUNIQUE3RIVER": "Unique 3 River",
     "CDLUPSIDEGAP2CROWS": "Upside Gap Two Crows",
     "CDLXSIDEGAP3METHODS": "Upside/Downside Gap Three Methods",
+
+    # Custom patterns
+    "OUR_HUMMER": "Our Version Of Hummer",
+    "OUR_OKAR_BUY": "Our Version Of Okar Buy",
+    "OUR_OKAR_SELL": "Our Version Of Okar Sell",
+    "OUR_SHOOTINGSTAR": "Our Version Of Shooting Star"
 }
 
 overlap_studies_label = {
@@ -148,7 +154,13 @@ suggested_candlestick_patterns = [
     "CDLINVERTEDHAMMER",
     "CDLSHOOTINGSTAR",
     "CDLHANGINGMAN",
-    "CDLPIERCING"
+    "CDLPIERCING",
+
+    # Custom patterns
+    "OUR_HUMMER",
+    "OUR_OKAR_BUY",
+    "OUR_OKAR_SELL",
+    "OUR_SHOOTINGSTAR"
 ]
 
 suggested_overlap_studies = ["BBANDS", "MA", "EMA"]
