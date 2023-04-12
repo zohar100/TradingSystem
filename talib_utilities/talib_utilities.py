@@ -37,11 +37,6 @@ class talib_utilities:
         close = market_data['Close']
         for indicator in overlap_studies:
             func_to_exec = getattr(talib, indicator)
-            if indicator == "BBANDS":
-                upper, middle, lower = func_to_exec(close, timeperiod=20)
-                market_data['upperband'] = upper
-                market_data['middleband'] = middle # Moving average
-                market_data['lowerband'] = lower
             if indicator == "SMA":
                 market_data[indicator] =  func_to_exec(close, timeperiod=8)
             if indicator == "EMA":
@@ -58,6 +53,11 @@ class talib_utilities:
                 market_data[indicator] =  func_to_exec(close, timeperiod=14)
             if indicator == "MACD":
                 market_data[indicator] =  func_to_exec(close, fastperiod=12, slowperiod=26, signalperiod=9)
+            if indicator == "BBANDS":
+                upper, middle, lower = func_to_exec(close, timeperiod=32)
+                market_data['upperband'] = upper
+                market_data['middleband'] = middle # Moving average
+                market_data['lowerband'] = lower
 
     @staticmethod
     def add_volume_idicators_to_dataframe(indicators: list[str], market_data: DataFrame):
