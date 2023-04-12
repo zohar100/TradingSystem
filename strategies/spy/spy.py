@@ -117,12 +117,23 @@ class spy(strategy):
         
         quantity = round(self.risk / today_open)
         last_day_patterns = []
+        today_first_pattern = []
         for pattern in self.candlestick_patterns:
-            if self.last_four_days_data[pattern][-1] == market_direction:
+            if self.last_four_days_data[pattern][-1] != 'N/A':
                 last_day_patterns.append(pattern)
+        
+        for index, row in today_data.iterrows():
+            if len(today_first_pattern) > 0:
+                break
+            for pattern in self.candlestick_patterns:
+                if row[pattern] == market_direction:
+                    found_at = datetime.strptime(str(index), '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S')
+                    today_first_pattern = [pattern, found_at]
+                    break
         
         order_extra_fields = {
             "last_day_patterns": ','.join(last_day_patterns),
+            "today_first_pattern": '~'.join(today_first_pattern),
             "support": support_and_resistance.find_closest_support_point(market_direction, today_open, self.current_date_snp),
             "resistance": support_and_resistance.find_closest_support_point("SELL" if market_direction == "BUY" else "BUY", today_open, self.current_date_snp),
         }
