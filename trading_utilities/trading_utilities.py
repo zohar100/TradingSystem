@@ -1,3 +1,4 @@
+from itertools import repeat
 from typing import Literal
 from pandas import DataFrame
 import pandas as pd
@@ -23,13 +24,16 @@ class trading_utilities:
         return True
 
     @staticmethod
-    def get_last_trading_date(date: date):
-        nyse = mcal.get_calendar("NYSE")
-        week_ago = date - datetime.timedelta(days=7)
-        schedule = nyse.schedule(start_date=week_ago, end_date=date)
-        schedule["Dates"] = pd.to_datetime(schedule["market_open"]).dt.date
-        schedule = schedule["Dates"]
-        last_trading_date = schedule[-2]
+    def get_last_trading_date(date: date, days_go_back: int = 1) -> date:
+        last_trading_date = None
+        for _ in repeat(None, days_go_back):
+            nyse = mcal.get_calendar("NYSE")
+            week_ago = date - datetime.timedelta(days=7)
+            schedule = nyse.schedule(start_date=week_ago, end_date=date)
+            schedule["Dates"] = pd.to_datetime(schedule["market_open"]).dt.date
+            schedule = schedule["Dates"]
+            last_trading_date = schedule[-2]
+
         return last_trading_date
     
     @staticmethod

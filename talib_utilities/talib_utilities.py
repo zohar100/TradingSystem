@@ -50,7 +50,7 @@ class talib_utilities:
         for indicator in indicators:
             func_to_exec = getattr(talib, indicator)
             if indicator == "RSI":
-                market_data[indicator] =  func_to_exec(close, timeperiod=14)
+                market_data[indicator] =  func_to_exec(close, timeperiod=20)
             if indicator == "MACD":
                 market_data[indicator] =  func_to_exec(close, fastperiod=12, slowperiod=26, signalperiod=9)
             if indicator == "BBANDS":

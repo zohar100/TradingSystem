@@ -1,3 +1,4 @@
+from itertools import repeat
 from typing import Literal
 import talib
 from datetime import datetime, date, time, timedelta
@@ -25,6 +26,7 @@ class strategy:
         start_time: time,
         end_time: time,
         symbols: list[str],
+        extra_days_back: int=0, # for get extra data from days before current check day
         data_provider: DataProvider=DataProvider.bars_api, 
         ib_app: IB=None, 
         commition: float = 1.8,
@@ -50,6 +52,7 @@ class strategy:
         
         self.data_provider = data_provider
 
+        self.extra_days_back = extra_days_back
         self.commition = commition
         self.symbols = symbols
         self.candlestick_patterns = candlestick_patterns
@@ -59,6 +62,7 @@ class strategy:
 
         self.market_data: dict[str, DataFrame] = {}
         self.current_bar_idx: str = None
+        self.current_date: date = None
         self.orders: list[dict] = []
 
     def is_support_and_resistance_selected(self, support_and_resistance: SupportAndResistance):
@@ -89,10 +93,14 @@ class strategy:
             if not trading_utilities.is_trading_day(date):
                 print(f"Market is close on {date}")
                 continue
-
+            self.current_date = date
             self.before_run_logic(date, self.get_snp_levels)
             self.market_data = {}
-            start_datetime = datetime.combine(date, self.strategy_start_time)
+            date_minus_extra_days = date
+            if self.extra_days_back != 0:
+                date_minus_extra_days = trading_utilities.get_last_trading_date(date_minus_extra_days, self.extra_days_back)
+
+            start_datetime = datetime.combine(date_minus_extra_days, self.strategy_start_time)
             end_datetime = datetime.combine(date, self.strategy_end_time)
             for symbol in self.symbols:
                 self.market_data[symbol] = self.get_data_with_requirements(start_datetime, end_datetime, self.interval, symbol)
