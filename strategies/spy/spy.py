@@ -128,14 +128,48 @@ class spy(strategy):
             for pattern in self.candlestick_patterns:
                 if row[pattern] == market_direction:
                     found_at = datetime.strptime(str(index), '%Y-%m-%d %H:%M:%S').strftime('%H:%M:%S')
-                    today_first_pattern = [pattern, found_at]
+                    today_first_pattern.append('~'.join([pattern, found_at]))
                     break
+
+        support = float(support_and_resistance.find_closest_support_point(market_direction, today_open, self.current_date_snp))
+        resistance = float(support_and_resistance.find_closest_support_point("SELL" if market_direction == "BUY" else "BUY", today_open, self.current_date_snp))
+
+        high = today_data["High"][0]
+        low = today_data["Low"][0]
+
+        is_touch_support = False
+        is_touch_resistance = False
+
+        if low < support and high > support:
+            is_touch_support = True
         
+        if low < resistance and high > resistance:
+            is_touch_resistance = True
+
+        support_distance = None
+        resistance_distance = None
+
+        if not is_touch_support:
+            if  low >= support:
+                support_distance = low - support
+            elif high <= support:
+                support_distance = support - high
+                
+        if not resistance_distance:
+            if  low <= resistance_distance:
+                support_distance = resistance_distance - low
+            elif high >= resistance_distance:
+                support_distance = high - resistance_distance
+
         order_extra_fields = {
             "last_day_patterns": ','.join(last_day_patterns),
-            "today_first_pattern": '~'.join(today_first_pattern),
+            "today_first_pattern": ','.join(today_first_pattern),
             "support": support_and_resistance.find_closest_support_point(market_direction, today_open, self.current_date_snp),
             "resistance": support_and_resistance.find_closest_support_point("SELL" if market_direction == "BUY" else "BUY", today_open, self.current_date_snp),
+            "is_touch_support": 'Y' if is_touch_support else 'N',
+            "is_touch_resistance": 'Y' if is_touch_resistance else 'N',
+            "support_distance": support_distance if support_distance else 'N/A',
+            "resistance_distance": resistance_distance if resistance_distance else 'N/A'
         }
         self.execute_order(STRATEGY_SYMBOL, market_direction, today_open, take_profit, quantity, today_data.index[0], None, order_extra_fields)
 
