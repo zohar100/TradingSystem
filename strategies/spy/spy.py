@@ -148,18 +148,19 @@ class spy(strategy):
 
         support_distance = None
         resistance_distance = None
+        if support: 
+            if not is_touch_support:
+                if  low >= support:
+                    support_distance = low - support
+                elif high <= support:
+                    support_distance = support - high
 
-        if not is_touch_support:
-            if  low >= support:
-                support_distance = low - support
-            elif high <= support:
-                support_distance = support - high
-                
-        if not resistance_distance:
-            if  low <= resistance_distance:
-                support_distance = resistance_distance - low
-            elif high >= resistance_distance:
-                support_distance = high - resistance_distance
+        if resistance:
+            if not resistance:
+                if  low <= resistance:
+                    support_distance = resistance - low
+                elif high >= resistance:
+                    support_distance = high - resistance
 
         order_extra_fields = {
             "last_day_patterns": ','.join(last_day_patterns),
